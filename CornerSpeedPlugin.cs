@@ -1,5 +1,6 @@
 ﻿using GameReaderCommon;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PropertyChanged;
 using SimHub.Plugins;
 using SimHub.Plugins.Dashstudio.Behaviors.Core.Interfaces;
@@ -41,8 +42,18 @@ namespace User.CornerSpeed
     //    public static int ieni(this DashHostControls dashHostControls) => 0;
 
     //}
+    
+    public class TurnNumbers
+    {
+        public List<Turn> turns;
+    };
 
-
+    public class Turn
+    {
+        public string name;
+        public float start;
+        public float end;
+    };
 
     [PluginDescription("My plugin description")]
     [PluginAuthor("Jack Humbert")]
@@ -85,6 +96,7 @@ namespace User.CornerSpeed
         public List<int> LapNumbers;
         public int NumberOfSectors = 10;
         public int CurrentSector = -1;
+        public string TrackId;
                
         public double[] CornerPositions = {
             0.055,
@@ -112,6 +124,25 @@ namespace User.CornerSpeed
 
         public bool GamePaused = false;
 
+        public TurnNumbers turnNumbers;
+
+        public void UpdateTurnNumbers(string trackId)
+        {
+            var file = Path.Combine(
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), 
+                "TurnNumbers", 
+                trackId + ".json"
+            );
+            if (File.Exists(file))
+            {
+                using (StreamReader r = new StreamReader(file))
+                {
+                    string json = r.ReadToEnd();
+                    turnNumbers = JsonConvert.DeserializeObject<TurnNumbers>(json);
+                }
+            }
+        }
+
         /// <summary>
         /// Called one time per game data update, contains all normalized game data,
         /// raw data are intentionally "hidden" under a generic object type (A plugin SHOULD NOT USE IT)
@@ -130,15 +161,22 @@ namespace User.CornerSpeed
             {
                 if (data.OldData != null && data.NewData != null)
                 {
-                    if (data.OldData.SectorsCount != NumberOfSectors)
+                    if (TrackId != data.NewData.TrackId)
                     {
-                        NumberOfSectors = (int)data.OldData.SectorsCount;
+                        TrackId = data.NewData.TrackId;
+                        Settings.UpdateAvailableLapFiles(TrackId);
+                        UpdateTurnNumbers(TrackId);
+                    }
+
+                    if (data.NewData.SectorsCount != NumberOfSectors)
+                    {
+                        NumberOfSectors = (int)data.NewData.SectorsCount;
                         //for (int i = 0; i < NumberOfLaps; i++) {
                             //SectorTimes[i] = new List<TimeSpan>(NumberOfSectors); 
                         //}
                     }
                     
-                    if (CurrentSector != (data.OldData.CurrentSectorIndex - 1))
+                    if (CurrentSector != (data.NewData.CurrentSectorIndex - 1))
                     {
                         if (CurrentSector != -1) { 
                             if (SectorTimes[CurrentLap % NumberOfLaps][CurrentSector] < SectorTimesBest[CurrentSector])
@@ -146,7 +184,7 @@ namespace User.CornerSpeed
                                 SectorTimesBest[CurrentSector] = SectorTimes[CurrentLap % NumberOfLaps][CurrentSector];
                             }
                         }
-                        CurrentSector = (data.OldData.CurrentSectorIndex - 1);
+                        CurrentSector = (data.NewData.CurrentSectorIndex - 1);
                     }
                     TimeSpan sectorsSum = TimeSpan.Zero;
                     for (int i = 0; i < CurrentSector; i++)
@@ -154,13 +192,13 @@ namespace User.CornerSpeed
                         sectorsSum += SectorTimes[CurrentLap % NumberOfLaps][i];
                     }
 
-                    if (data.OldData.CurrentLap != CurrentLap)
+                    if (data.NewData.CurrentLap != CurrentLap)
                     {
-                        //LapTimes[CurrentLap % NumberOfLaps] = data.OldData.CurrentLapTime;
-                        //LapTimes[CurrentLap % NumberOfLaps] = data.OldData.LastLapTime;
+                        //LapTimes[CurrentLap % NumberOfLaps] = data.NewData.CurrentLapTime;
+                        //LapTimes[CurrentLap % NumberOfLaps] = data.NewData.LastLapTime;
                         LapNumbers[CurrentLap % NumberOfLaps] = CurrentLap;
 
-                        CurrentLap = data.OldData.CurrentLap;
+                        CurrentLap = data.NewData.CurrentLap;
                         for (int corner_i = 0; corner_i < NumberOfCorners; corner_i++) {
                             CornerSpeeds[CurrentLap % NumberOfLaps][corner_i] = 999.9;
                         }
@@ -169,24 +207,24 @@ namespace User.CornerSpeed
                         }
                     }
                     
-                    LapTimes[CurrentLap % NumberOfLaps] = data.OldData.CurrentLapTime;
+                    LapTimes[CurrentLap % NumberOfLaps] = data.NewData.CurrentLapTime;
                     
-                    SectorTimes[CurrentLap % NumberOfLaps][CurrentSector] = data.OldData.CurrentLapTime - sectorsSum;
+                    SectorTimes[CurrentLap % NumberOfLaps][CurrentSector] = data.NewData.CurrentLapTime - sectorsSum;
 
                     CurrentCorner = -1;
                     for (int i = 0; i < CornerPositions.Length; i++)
                     {
-                        if (Math.Abs(data.OldData.TrackPositionPercent - CornerPositions[i]) < 0.010)
+                        if (Math.Abs(data.NewData.TrackPositionPercent - CornerPositions[i]) < 0.010)
                         {
                             CurrentCorner = i;
                             break;
                         }
                     }
-                    //corner = (int)((data.OldData.TrackPositionPercent + (0.5 / NumberOfCorners)) % 1.0 * NumberOfCorners);
-                    if (CurrentCorner != -1 && data.OldData.SpeedLocal < CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner])
+                    //corner = (int)((data.NewData.TrackPositionPercent + (0.5 / NumberOfCorners)) % 1.0 * NumberOfCorners);
+                    if (CurrentCorner != -1 && data.NewData.SpeedLocal < CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner])
                     {
                         //this.TriggerEvent("NewMinSpeed");
-                        CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner] = data.OldData.SpeedLocal;
+                        CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner] = data.NewData.SpeedLocal;
                     }
 
                 }
@@ -244,6 +282,10 @@ namespace User.CornerSpeed
 
         public void LoadLapFile()
         {
+            if (!File.Exists(Settings.LapFile)) { 
+                ComparisonLapSectors.Clear();
+                return;
+            }
             using (FileStream fs = File.OpenRead(Settings.LapFile))
             {
                 using (BinaryReader reader = new BinaryReader(fs))
@@ -296,6 +338,32 @@ namespace User.CornerSpeed
         }
 
         public static ResourceDictionary JackDashResource;
+
+        public double LapDist;
+        private Marker _currentMarker;
+
+        public Marker GetCurrentMarker() {
+            if (ComparisonLapSectors.Count == 0)
+                return null;
+            var dist = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapDist"));
+            if (LapDist != dist) {
+                LapDist = dist;
+                var sector_i = 0;
+                var marker_i = 0;
+                var dist_cum = 0.0;
+                while (dist_cum < dist) {
+                    dist_cum += ComparisonLapSectors[sector_i].distance_per_marker;
+                    marker_i++;
+                    if (marker_i >= ComparisonLapSectors[sector_i].num_markers)
+                    {
+                        sector_i++;
+                        marker_i = 0;
+                    }
+                }
+                _currentMarker = ComparisonLapSectors[sector_i].Markers[marker_i];
+            }
+            return _currentMarker;
+        }
                 
         /// <summary>
         /// Called once after plugins startup
@@ -313,7 +381,9 @@ namespace User.CornerSpeed
 
             // Load settings
             Settings = this.ReadCommonSettings<CornerSpeedPluginSettings>("GeneralSettings", () => new CornerSpeedPluginSettings());
-            
+
+            //Settings.UpdateLapFiles();
+                        
             LoadLapFile();
 
             CornerSpeeds = new List<List<double>>();
@@ -328,58 +398,64 @@ namespace User.CornerSpeed
             this.AttachDelegate(name: "NumberOfCorners", valueProvider: () => NumberOfCorners);
             this.AttachDelegate(name: "CurrentCorner", valueProvider: () => CurrentCorner);
 
+            this.AttachDelegate(name: "TurnNumber", valueProvider: () => { 
+                //var pct = PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapDistPct");
+                var pct = PluginManager.GetPropertyValue("TrackPositionPercent");
+                if (pct != null && turnNumbers != null) { 
+                    var dist = Convert.ToDouble(pct);
+                    for (int i = 0; i < turnNumbers.turns.Count; i++)
+                    {
+                        if (turnNumbers.turns[i].start <= dist && dist < turnNumbers.turns[i].end)
+                        {
+                            return turnNumbers.turns[i].name;
+                        }
+                    }
+                }
+                return null;
+            });
+
             this.AttachDelegate(name: "NumberOfSectors", valueProvider: () => NumberOfSectors);
             this.AttachDelegate(name: "CurrentSector", valueProvider: () => CurrentSector);
-
+            
             this.AttachDelegate(name: "GamePaused", valueProvider: () => GamePaused);
+
+            this.AttachDelegate(name: "HasComparisonLap", valueProvider: () => ComparisonLapSectors.Count != 0);
             
             this.AttachDelegate(name: "ComparisonLapThrottle", valueProvider: () => {
-                var dist = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapDist"));
-                var sector_i = 0;
-                var marker_i = 0;
-                var dist_cum = 0.0;
-                while (dist_cum < dist) {
-                    dist_cum += ComparisonLapSectors[sector_i].distance_per_marker;
-                    marker_i++;
-                    if (marker_i >= ComparisonLapSectors[sector_i].num_markers)
-                    {
-                        sector_i++;
-                        marker_i = 0;
-                    }
-                }
-                return ComparisonLapSectors[sector_i].Markers[marker_i].Throttle;
+                if (GetCurrentMarker() != null)
+                    return GetCurrentMarker().Throttle;
+                return 0.0;
             });
             this.AttachDelegate(name: "ComparisonLapBrake", valueProvider: () => {
-                var dist = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapDist"));
-                var sector_i = 0;
-                var marker_i = 0;
-                var dist_cum = 0.0;
-                while (dist_cum < dist) {
-                    dist_cum += ComparisonLapSectors[sector_i].distance_per_marker;
-                    marker_i++;
-                    if (marker_i >= ComparisonLapSectors[sector_i].num_markers)
-                    {
-                        sector_i++;
-                        marker_i = 0;
-                    }
-                }
-                return ComparisonLapSectors[sector_i].Markers[marker_i].Brake;
+                if (GetCurrentMarker() != null)
+                    return GetCurrentMarker().Brake;
+                return 0.0;
             });
             this.AttachDelegate(name: "ComparisonLapGear", valueProvider: () => {
+                if (GetCurrentMarker() != null)
+                    return GetCurrentMarker().Gear;
+                return 0.0;
+            });
+            this.AttachDelegate(name: "ComparisonLapDelta", valueProvider: () => {
+                if (ComparisonLapSectors.Count == 0)
+                    return 0.0;
                 var dist = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapDist"));
                 var sector_i = 0;
                 var marker_i = 0;
                 var dist_cum = 0.0;
+                var time_cum = 0.0;
                 while (dist_cum < dist) {
                     dist_cum += ComparisonLapSectors[sector_i].distance_per_marker;
                     marker_i++;
                     if (marker_i >= ComparisonLapSectors[sector_i].num_markers)
                     {
+                        time_cum += ComparisonLapSectors[sector_i].Markers[marker_i-1].sector_time;
                         sector_i++;
                         marker_i = 0;
                     }
                 }
-                return ComparisonLapSectors[sector_i].Markers[marker_i].Gear;
+                //var time = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapCurrentLapTime"));
+                return time_cum + ComparisonLapSectors[sector_i].Markers[marker_i].sector_time;
             });
 
             // Declare a property available in the property list, this gets evaluated "on demand" (when shown or used in formulas)

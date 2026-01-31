@@ -21,16 +21,45 @@
 
 
             <styles:SHSection
-                Title="MY PLUGIN OPTIONS"
+                Title="Input Trace Comparison File"
                 Grid.ColumnSpan="2"
                 ShowSeparator="True">
                 <StackPanel>
 
-                    <!--  ui:SHTextEditorDialog Text="{Binding Path=Settings.LapFile}" /  -->
-                    <TextBox Text="{Binding ElementName=me, Path=CornerSpeedPluginSettings.LapFile}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <!--  ui:SHTextEditorDialog Text="{Binding Path=Settings.LapFile}" /  -->
+                        <TextBox Grid.Column="0" Text="{Binding ElementName=me, Path=CornerSpeedPluginSettings.LapFile}" />
 
-                    <styles:SHButtonPrimary HorizontalAlignment="Left" Click="SHButtonPrimary_Click">Load Lap</styles:SHButtonPrimary>
+                        <styles:SHButtonPrimary
+                            Grid.Column="1"
+                            HorizontalAlignment="Left"
+                            Click="SHButtonPrimary_Click">
+                            Load Lap
+                        </styles:SHButtonPrimary>
+                        <styles:SHButtonSecondary
+                            Grid.Column="2"
+                            HorizontalAlignment="Left"
+                            Click="SHButtonPrimary_Click2"
+                            Content="Clear Lap" />
+                    </Grid>
 
+                    <styles:SHSubSection Title="Lap files for track">
+                        <ItemsControl ItemsSource="{Binding ElementName=me, Path=CornerSpeedPluginSettings.AvailableFiles, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <styles:SHButtonSecondary
+                                        HorizontalAlignment="Left"
+                                        Click="SHButtonSecondary_Click"
+                                        Content="{Binding}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </styles:SHSubSection>
 
                 </StackPanel>
             </styles:SHSection>

@@ -61,5 +61,17 @@ namespace User.CornerSpeed
         {
             Plugin.LoadLapFile();
         }
+
+        private void SHButtonPrimary_Click2(object sender, RoutedEventArgs e)
+        {
+            Plugin.Settings.LapFile = "";
+            Plugin.LoadLapFile();
+        }
+
+        private void SHButtonSecondary_Click(object sender, RoutedEventArgs e)
+        {
+            Plugin.Settings.LapFile = (string)((Button)sender).Content;
+            Plugin.LoadLapFile();
+        }
     }
 }
