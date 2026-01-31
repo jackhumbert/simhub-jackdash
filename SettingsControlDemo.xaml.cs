@@ -1,4 +1,6 @@
-﻿using SimHub.Plugins.Styles;
+﻿using SimHub.Plugins.Devices.DevicesExtensionsDummy;
+using SimHub.Plugins.Styles;
+using System.Windows;
 using System.Windows.Controls;
 using WoteverLocalization;
 
@@ -15,10 +17,21 @@ namespace User.CornerSpeed
         {
             InitializeComponent();
         }
+                
+        public static readonly DependencyProperty CornerSpeedPluginSettingsProperty =
+            DependencyProperty.Register("CornerSpeedPluginSettings", typeof(CornerSpeedPluginSettings), typeof(SettingsControlDemo), new PropertyMetadata(null));
+
+        
+        public CornerSpeedPluginSettings CornerSpeedPluginSettings
+        {
+            get { return (CornerSpeedPluginSettings)GetValue(CornerSpeedPluginSettingsProperty); }
+            set { SetValue(CornerSpeedPluginSettingsProperty, value); }
+        }
 
         public SettingsControlDemo(CornerSpeedPlugin plugin) : this()
         {
             this.Plugin = plugin;
+            CornerSpeedPluginSettings = plugin.Settings;
         }
 
         private async void StyledMessageBox_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -42,6 +55,11 @@ namespace User.CornerSpeed
             var res = await dialogWindow.ShowDialogWindowAsync(this);
 
             await SHMessageBox.Show(res.ToString());
+        }
+
+        private void SHButtonPrimary_Click(object sender, RoutedEventArgs e)
+        {
+            Plugin.LoadLapFile();
         }
     }
 }

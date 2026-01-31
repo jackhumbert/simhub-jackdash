@@ -1,0 +1,23 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:anim="https://github.com/whistyun/AnimatedImage.Wpf"
+    xmlns:editorcontrols="clr-namespace:SimHub.Plugins.OutputPlugins.EditorControls;assembly=SimHub.Plugins"
+    xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+    xmlns:local="clr-namespace:SimHub.Plugins.OutputPlugins.GraphicalDash;assembly=SimHub.Plugins"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:oxy="http://oxyplot.org/wpf"
+    xmlns:user="clr-namespace:User.CornerSpeed">
+    <DataTemplate x:Key="{DataTemplateKey {x:Type user:JackWidgetItem}}" DataType="{x:Type user:JackWidgetItem}">
+        <editorcontrols:ControlHost>
+            <user:JackChart
+                AutoMaximum="{Binding Path=UseMaximum, Converter={NotBoolConverter}}"
+                AutoMinimum="{Binding Path=UseMinimum, Converter={NotBoolConverter}}"
+                DataPoints="{Binding Points}"
+                LineColor="{Binding Path=LineColor}"
+                LineThickness="{Binding Path=LineTickness}"
+                Maximum="{Binding Path=Maximum}"
+                Minimum="{Binding Path=Minimum}" />
+        </editorcontrols:ControlHost>
+    </DataTemplate>
+</ResourceDictionary>

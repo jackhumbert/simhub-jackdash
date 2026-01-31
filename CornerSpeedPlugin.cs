@@ -1,18 +1,49 @@
 ﻿using GameReaderCommon;
+using Newtonsoft.Json;
+using PropertyChanged;
 using SimHub.Plugins;
+using SimHub.Plugins.Dashstudio.Behaviors.Core.Interfaces;
 using SimHub.Plugins.DataPlugins.DataCore;
+using SimHub.Plugins.Devices.DevicesExtensionsDummy;
 using SimHub.Plugins.Devices.Registry.Impl.TurtleBeach.UI;
+using SimHub.Plugins.OutputPlugins.EditorControls;
+using SimHub.Plugins.OutputPlugins.GraphicalDash;
+using SimHub.Plugins.OutputPlugins.GraphicalDash.Models;
+using SimHub.Plugins.OutputPlugins.GraphicalDash.Render;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Resources;
+using System.Runtime;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using static User.CornerSpeed.CornerSpeedPlugin;
 
+
+//         <ResourceDictionary Source="/SimHub.Plugins;component/OutputPlugins/GraphicalDash/Render/ControlsTemplates.xaml" />
+
+//namespace SimHub.Plugins.OutputPlugins.GraphicalDash.Models
+//{
+
 namespace User.CornerSpeed
-{
+{ 
+    //public static class MyExt
+    //{
+    //    public static int ieni(this DashHostControls dashHostControls) => 0;
+
+    //}
+
+
+
     [PluginDescription("My plugin description")]
     [PluginAuthor("Jack Humbert")]
     [PluginName("Corner Speed")]
@@ -24,6 +55,9 @@ namespace User.CornerSpeed
         /// Instance of the current plugin manager
         /// </summary>
         public PluginManager PluginManager { get; set; }
+
+        //public SimpleChart item;
+        //public SimHub.Plugins.OutputPlugins.GraphicalDash.SelectionTemplateSelector selector;
 
         /// <summary>
         /// Gets the left menu icon. Icon must be 24x24 and compatible with black and white display.
@@ -208,19 +242,9 @@ namespace User.CornerSpeed
             public byte Gear; // <read=Str("%d", this - 1)>; // gear plus one
         };
 
-        /// <summary>
-        /// Called once after plugins startup
-        /// Plugins are rebuilt at game change
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        public void Init(PluginManager pluginManager)
+        public void LoadLapFile()
         {
-            SimHub.Logging.Current.Info("Starting plugin");
-
-            // Load settings
-            Settings = this.ReadCommonSettings<CornerSpeedPluginSettings>("GeneralSettings", () => new CornerSpeedPluginSettings());
-            
-            using (FileStream fs = File.OpenRead("C:\\Users\\Jack\\Documents\\iRacing\\lapfiles\\spa 2024 up\\Kyle Hayne - 02.16.603 - BLAP - Porsche 911 GT3 R (992) - Spa-Francorchamps (GP Pits) (Garage 61 - 01KG7PBB6CXS2530FHWJ6KVP3D).blap"))
+            using (FileStream fs = File.OpenRead(Settings.LapFile))
             {
                 using (BinaryReader reader = new BinaryReader(fs))
                 { 
@@ -262,6 +286,35 @@ namespace User.CornerSpeed
                     }
                 }
             }
+        }
+
+        private static void OnDashHostControlsLoaded(object sender, RoutedEventArgs e)
+        {
+            var control = (FrameworkElement)sender;
+
+            control.Resources.MergedDictionaries.Insert(0, JackDashResource);
+        }
+
+        public static ResourceDictionary JackDashResource;
+                
+        /// <summary>
+        /// Called once after plugins startup
+        /// Plugins are rebuilt at game change
+        /// </summary>
+        /// <param name="pluginManager"></param>
+        public void Init(PluginManager pluginManager)
+        {
+            SimHub.Logging.Current.Info("Starting plugin");
+
+            JackDashResource = Application.LoadComponent(new Uri("/User.CornerSpeed;component/ControlsTemplates.xaml", UriKind.RelativeOrAbsolute)) as ResourceDictionary;
+            
+            EventManager.RegisterClassHandler(typeof(DashHostControls), FrameworkElement.LoadedEvent, new RoutedEventHandler(OnDashHostControlsLoaded));
+            EventManager.RegisterClassHandler(typeof(DashHostControlsRendering), FrameworkElement.LoadedEvent, new RoutedEventHandler(OnDashHostControlsLoaded));
+
+            // Load settings
+            Settings = this.ReadCommonSettings<CornerSpeedPluginSettings>("GeneralSettings", () => new CornerSpeedPluginSettings());
+            
+            LoadLapFile();
 
             CornerSpeeds = new List<List<double>>();
             SectorTimes = new List<List<TimeSpan>>();
@@ -338,8 +391,8 @@ namespace User.CornerSpeed
                 LapNumbers.Add(-1);
                 var ilap_s = lap.ToString().PadLeft(2, '0');
                 int ilap_i = lap;
-                this.AttachDelegate(name: $"LapTimes_{ilap_s}", valueProvider: () => LapTimes[(CurrentLap - ilap_i) % NumberOfLaps]);
-                this.AttachDelegate(name: $"LapNumbers_{ilap_s}", valueProvider: () => LapNumbers[(CurrentLap - ilap_i) % NumberOfLaps]);
+                this.AttachDelegate(name: $"LapTimes_{ilap_s}", valueProvider: () => LapTimes[(CurrentLap + NumberOfLaps - ilap_i) % NumberOfLaps]);
+                this.AttachDelegate(name: $"LapNumbers_{ilap_s}", valueProvider: () => LapNumbers[(CurrentLap + NumberOfLaps - ilap_i) % NumberOfLaps]);
 
 
                 for (int corner = 0; corner < NumberOfCorners; corner++) {
@@ -348,7 +401,7 @@ namespace User.CornerSpeed
                     var corner_s = corner.ToString().PadLeft(2, '0');
                     int lap_i = lap;
                     int corner_i = corner;
-                    this.AttachDelegate(name: $"CornerSpeed_{lap_s}_{corner_s}", valueProvider: () => CornerSpeeds[(CurrentLap - lap_i) % NumberOfLaps][corner_i]);
+                    this.AttachDelegate(name: $"CornerSpeed_{lap_s}_{corner_s}", valueProvider: () => CornerSpeeds[(CurrentLap + NumberOfLaps - lap_i) % NumberOfLaps][corner_i]);
                     this.AttachDelegate(name: $"CornerSpeedRating_{lap_s}_{corner_s}", valueProvider: () => {
                         var min = 999.9;
                         var max = 0.0;
@@ -366,7 +419,7 @@ namespace User.CornerSpeed
                             }
                         }
                         if (min != 999.9 && max != 0.0) { 
-                            return (CornerSpeeds[(CurrentLap - lap_i) % NumberOfLaps][corner_i] - min) / (max - min);
+                            return (CornerSpeeds[(CurrentLap + NumberOfLaps - lap_i) % NumberOfLaps][corner_i] - min) / (max - min);
                         } else
                         {
                             return 0.0;
@@ -380,7 +433,7 @@ namespace User.CornerSpeed
                     var sector_s = sector.ToString().PadLeft(2, '0');
                     int lap_i = lap;
                     int sector_i = sector;
-                    this.AttachDelegate(name: $"SectorTime_{lap_s}_{sector_s}", valueProvider: () => SectorTimes[(CurrentLap - lap_i) % NumberOfLaps][sector_i]);
+                    this.AttachDelegate(name: $"SectorTime_{lap_s}_{sector_s}", valueProvider: () => SectorTimes[(CurrentLap + NumberOfLaps - lap_i) % NumberOfLaps][sector_i]);
                     
                     this.AttachDelegate(name: $"SectorTimeRating_{lap_s}_{sector_s}", valueProvider: () => {
                         var min = 999.9;
@@ -399,7 +452,7 @@ namespace User.CornerSpeed
                             }
                         }
                         if (min != 999.9 && max != 0.0) { 
-                            return (SectorTimes[(CurrentLap - lap_i) % NumberOfLaps][sector_i].TotalSeconds - min) / (max - min);
+                            return (SectorTimes[(CurrentLap + NumberOfLaps - lap_i) % NumberOfLaps][sector_i].TotalSeconds - min) / (max - min);
                         } else
                         {
                             return 0.0;
@@ -417,26 +470,19 @@ namespace User.CornerSpeed
             }
 
             // Declare an event
-            this.AddEvent(eventName: "SpeedWarning");
-            this.AddEvent(eventName: "NewMinSpeed");
+            //this.AddEvent(eventName: "SpeedWarning");
+            //this.AddEvent(eventName: "NewMinSpeed");
 
             // Declare an action which can be called
-            this.AddAction(
-                actionName: "IncrementSpeedWarning",
-                actionStart: (a, b) =>
-                {
-                    Settings.SpeedWarningLevel++;
-                    SimHub.Logging.Current.Info("Speed warning changed");
-                });
+            //this.AddAction(
+            //    actionName: "IncrementSpeedWarning",
+            //    actionStart: (a, b) =>
+            //    {
+            //        Settings.SpeedWarningLevel++;
+            //        SimHub.Logging.Current.Info("Speed warning changed");
+            //    });
 
             // Declare an action which can be called, actions are meant to be "triggered" and does not reflect an input status (pressed/released ...)
-            this.AddAction(
-                actionName: "DecrementSpeedWarning",
-                actionStart: (a, b) =>
-                {
-                    Settings.SpeedWarningLevel--;
-                });
-
             this.AddAction(
                 actionName: "PauseGame",
                 actionStart: (a, b) =>
@@ -461,31 +507,12 @@ namespace User.CornerSpeed
             // Declare an input which can be mapped, inputs are meant to be keeping state of the source inputs,
             // they won't trigger on inputs not capable of "holding" their state.
             // Internally they work similarly to AddAction, but are restricted to a "during" behavior
-            this.AddInputMapping(
-                inputName: "InputPressed",
-                inputPressed: (a, b) => {/* One of the mapped input has been pressed   */},
-                inputReleased: (a, b) => {/* One of the mapped input has been released */}
-            );
+            //this.AddInputMapping(
+            //    inputName: "InputPressed",
+            //    inputPressed: (a, b) => {/* One of the mapped input has been pressed   */},
+            //    inputReleased: (a, b) => {/* One of the mapped input has been released */}
+            //);
 
-            // Declare an input which can be mapped, inputs are meant to be keeping state of the source inputs,
-            // they won't trigger on inputs not capable of "holding" their state.
-            // Internally they work similarly to AddAction, but are restricted to a "during" behavior
-            //this.AddInputMapping(
-            //    inputName: "PauseGame",
-            //    inputPressed: (a, b) =>
-            //    {/* One of the mapped input has been pressed   */
-            //        GamePaused = true;
-            //    },
-            //    inputReleased: (a, b) => {/* One of the mapped input has been released */}
-            //);
-            //this.AddInputMapping(
-            //    inputName: "UnpauseGame",
-            //    inputPressed: (a, b) =>
-            //    {/* One of the mapped input has been pressed   */
-            //        GamePaused = false;
-            //    },
-            //    inputReleased: (a, b) => {/* One of the mapped input has been released */}
-            //);
         }
     }
 }
