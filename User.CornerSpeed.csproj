@@ -1,8 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.props" Condition="Exists('packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.props')" />
   <Import Project="packages\PropertyChanged.Fody.4.1.0\build\PropertyChanged.Fody.props" Condition="Exists('packages\PropertyChanged.Fody.4.1.0\build\PropertyChanged.Fody.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <LangVersion>preview</LangVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{833040C9-FE5E-4CCF-B21D-71979E049B6B}</ProjectGuid>
@@ -27,7 +29,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -73,6 +75,9 @@
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="PostSharp, Version=2026.0.5.0, Culture=neutral, PublicKeyToken=b13fd38b8f9c99d7, processorArchitecture=MSIL">
+      <HintPath>packages\PostSharp.Redist.2026.0.5\lib\net452\PostSharp.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="PropertyChanged, Version=4.1.0.0, Culture=neutral, PublicKeyToken=ee3ee20bcf148ddd, processorArchitecture=MSIL">
@@ -112,18 +117,37 @@
     <Reference Include="WoteverLocalization">
       <HintPath>$(SIMHUB_INSTALL_PATH)WoteverLocalization.dll</HintPath>
     </Reference>
+    <Reference Include="Xamarin.Forms.Core, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Xamarin.Forms.5.0.0.2662\lib\netstandard2.0\Xamarin.Forms.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Forms.Platform, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Xamarin.Forms.5.0.0.2662\lib\netstandard2.0\Xamarin.Forms.Platform.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Forms.Xaml, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Xamarin.Forms.5.0.0.2662\lib\netstandard2.0\Xamarin.Forms.Xaml.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Converters.cs" />
+    <Compile Include="CornerSpeedStorage.cs" />
+    <Compile Include="iRacingCorner.cs" />
+    <Compile Include="iRacingCornerSpeedDelta.xaml.cs">
+      <DependentUpon>iRacingCornerSpeedDelta.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="iRacingCornerSpeedRowItem.xaml.cs">
+      <DependentUpon>iRacingCornerSpeedRowItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="iRacingCornerSpeedsView.xaml.cs">
+      <DependentUpon>iRacingCornerSpeedsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="iRacingGroupItem.cs" />
+    <Compile Include="iRacingGroupPresenter.cs" />
+    <Compile Include="iRacingLayer.cs" />
+    <Compile Include="iRacingLayerPresenter.cs" />
     <Compile Include="JackChart.cs" />
     <Compile Include="JackWidgetItem.cs" />
     <Compile Include="CornerSpeedPlugin.cs" />
     <Compile Include="CornerSpeedPluginSettings.cs" />
-    <Compile Include="DemoDialogWindow.xaml.cs">
-      <DependentUpon>DemoDialogWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="DemoWindow.xaml.cs">
-      <DependentUpon>DemoWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -133,17 +157,25 @@
     <Compile Include="SettingsControlDemo.xaml.cs">
       <DependentUpon>SettingsControlDemo.xaml</DependentUpon>
     </Compile>
+    <Compile Include="XAMLLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="ControlsTemplates.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="DemoDialogWindow.xaml">
+    <Page Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="iRacingCornerSpeedDelta.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DemoWindow.xaml">
+    <Page Include="iRacingCornerSpeedRowItem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="iRacingCornerSpeedsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -171,7 +203,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="TurnNumbers\monza combinedchicanes.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
@@ -188,7 +219,10 @@ XCOPY /Y /R /I "$(ProjectDir)Languages\*.resx" "%25SIMHUB_INSTALL_PATH%25\Langua
     </PropertyGroup>
     <Error Condition="!Exists('packages\Fody.6.6.4\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Fody.6.6.4\build\Fody.targets'))" />
     <Error Condition="!Exists('packages\PropertyChanged.Fody.4.1.0\build\PropertyChanged.Fody.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\PropertyChanged.Fody.4.1.0\build\PropertyChanged.Fody.props'))" />
+    <Error Condition="!Exists('packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.props'))" />
+    <Error Condition="!Exists('packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.targets'))" />
   </Target>
+  <Import Project="packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.targets" Condition="Exists('packages\Xamarin.Forms.5.0.0.2662\build\Xamarin.Forms.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

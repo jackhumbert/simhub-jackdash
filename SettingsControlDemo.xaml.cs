@@ -41,22 +41,6 @@ namespace User.CornerSpeed
             await SHMessageBox.Show(res.ToString());
         }
 
-        private void DemoWindow_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            var window = new DemoWindow();
-
-            window.Show();
-        }
-
-        private async void DemodialogWindow_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            var dialogWindow = new DemoDialogWindow();
-
-            var res = await dialogWindow.ShowDialogWindowAsync(this);
-
-            await SHMessageBox.Show(res.ToString());
-        }
-
         private void SHButtonPrimary_Click(object sender, RoutedEventArgs e)
         {
             Plugin.LoadLapFile();

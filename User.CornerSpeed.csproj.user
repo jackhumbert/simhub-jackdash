@@ -7,4 +7,8 @@
   <PropertyGroup>
     <ProjectView>ShowAllFiles</ProjectView>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files %28x86%29\SimHub\SimHubWPF.exe</StartProgram>
+  </PropertyGroup>
 </Project>
