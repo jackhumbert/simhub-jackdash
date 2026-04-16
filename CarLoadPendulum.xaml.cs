@@ -32,6 +32,13 @@ namespace User.CornerSpeed
 
     public partial class CarLoadPendulum : UserControl
     {
+        private const double MinPendulumLength = 10.0;
+        private const double MinMassWeight = 0.1;
+        private const double MaxAccelerationG = 1.5;
+        private const double BaseMassSize = 20.0;
+        private const double MaxAdditionalMassSize = 20.0;
+        private const double MassSizeScaleFactor = 2.0;
+
         private readonly DispatcherTimer _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(33) };
         private double _x;
         private double _y;
@@ -67,14 +74,14 @@ namespace User.CornerSpeed
                 return;
             }
 
-            var length = Math.Max(10.0, item.PendulumLength);
-            var massWeight = Math.Max(0.1, item.MassWeight);
+            var length = Math.Max(MinPendulumLength, item.PendulumLength);
+            var massWeight = Math.Max(MinMassWeight, item.MassWeight);
             var responsiveness = Math.Min(1.0, 0.25 / massWeight);
             var lateral = GetPropertyValue(item.LateralLoadProperty);
             var longitudinal = GetPropertyValue(item.LongitudinalLoadProperty);
 
-            var targetX = Math.Max(-1.5, Math.Min(1.5, lateral)) / 1.5 * length;
-            var targetY = Math.Max(-1.5, Math.Min(1.5, -longitudinal)) / 1.5 * length;
+            var targetX = Math.Max(-MaxAccelerationG, Math.Min(MaxAccelerationG, lateral)) / MaxAccelerationG * length;
+            var targetY = Math.Max(-MaxAccelerationG, Math.Min(MaxAccelerationG, -longitudinal)) / MaxAccelerationG * length;
 
             _x += (targetX - _x) * responsiveness;
             _y += (targetY - _y) * responsiveness;
@@ -82,7 +89,7 @@ namespace User.CornerSpeed
             var centerX = ActualWidth > 0 ? ActualWidth / 2.0 : 80.0;
             var centerY = ActualHeight > 0 ? ActualHeight / 2.0 : 80.0;
 
-            var massSize = 20.0 + Math.Min(20.0, massWeight * 2.0);
+            var massSize = BaseMassSize + Math.Min(MaxAdditionalMassSize, massWeight * MassSizeScaleFactor);
             PendulumMass.Width = massSize;
             PendulumMass.Height = massSize;
 
