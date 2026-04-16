@@ -38,8 +38,10 @@ namespace User.CornerSpeed
         private const double BaseMassSize = 20.0;
         private const double MaxAdditionalMassSize = 20.0;
         private const double MassSizeScaleFactor = 2.0;
+        private const double DefaultCenterOffset = 80.0;
+        private const int UpdateIntervalMs = 33;
 
-        private readonly DispatcherTimer _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(33) };
+        private readonly DispatcherTimer _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(UpdateIntervalMs) };
         private double _x;
         private double _y;
 
@@ -86,8 +88,8 @@ namespace User.CornerSpeed
             _x += (targetX - _x) * responsiveness;
             _y += (targetY - _y) * responsiveness;
 
-            var centerX = ActualWidth > 0 ? ActualWidth / 2.0 : 80.0;
-            var centerY = ActualHeight > 0 ? ActualHeight / 2.0 : 80.0;
+            var centerX = ActualWidth > 0 ? ActualWidth / 2.0 : DefaultCenterOffset;
+            var centerY = ActualHeight > 0 ? ActualHeight / 2.0 : DefaultCenterOffset;
 
             var massSize = BaseMassSize + Math.Min(MaxAdditionalMassSize, massWeight * MassSizeScaleFactor);
             PendulumMass.Width = massSize;
