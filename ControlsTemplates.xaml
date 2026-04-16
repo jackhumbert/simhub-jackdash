@@ -85,4 +85,9 @@
             <user:iRacingCornerSpeedDelta />
         </editorcontrols:ControlHost>
     </DataTemplate>
+    <DataTemplate x:Key="{DataTemplateKey {x:Type user:CarLoadPendulumItem}}" DataType="{x:Type user:CarLoadPendulumItem}">
+        <editorcontrols:ControlHost>
+            <user:CarLoadPendulum />
+        </editorcontrols:ControlHost>
+    </DataTemplate>
 </ResourceDictionary>

@@ -131,6 +131,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CarLoadPendulum.xaml.cs">
+      <DependentUpon>CarLoadPendulum.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Converters.cs" />
     <Compile Include="CornerSpeedStorage.cs" />
     <Compile Include="iRacingChatCommand.cs" />
@@ -164,6 +167,10 @@
     <Compile Include="XAMLLoader.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="CarLoadPendulum.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ControlsTemplates.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
