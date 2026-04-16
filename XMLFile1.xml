@@ -1,0 +1,380 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:oxy="http://oxyplot.org/wpf" xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:dopascript="clr-namespace:DopaScript;assembly=CircularGauge" xmlns:editorcontrols="clr-namespace:SimHub.Plugins.OutputPlugins.EditorControls" xmlns:local="clr-namespace:SimHub.Plugins.OutputPlugins.GraphicalDash" xmlns:models="clr-namespace:SimHub.Plugins.OutputPlugins.GraphicalDash.Models" xmlns:anim="https://github.com/whistyun/AnimatedImage.Wpf" xmlns:render="clr-namespace:SimHub.Plugins.OutputPlugins.GraphicalDash.Render">
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:ChartItem}}" DataType="{x:Type models:ChartItem}">
+		<editorcontrols:ControlHost>
+			<render:SimpleChart AutoMaximum="{Binding Path=UseMaximum, Converter={NotBoolConverter}}" AutoMinimum="{Binding Path=UseMinimum, Converter={NotBoolConverter}}" Maximum="{Binding Path=Maximum}" Minimum="{Binding Path=Minimum}" DataPoints="{Binding Points}" LineThickness="{Binding Path=LineTickness}" LineColor="{Binding Path=LineColor}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:LeaderBoardItem}}" DataType="{x:Type models:LeaderBoardItem}">
+		<editorcontrols:ControlHost>
+			<editorcontrols:LeaderBoard />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:RadarItem}}" DataType="{x:Type models:RadarItem}">
+		<editorcontrols:ControlHost>
+			<editorcontrols:Radar />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:WebPageItem}}" DataType="{x:Type models:WebPageItem}">
+		<editorcontrols:ControlHost>
+			<editorcontrols:WebPageView Adress="{Binding Path=StartAddress}" AllowTransparency="{Binding Path=AllowTransparency}" IsHitTestVisible="{Binding Path=ClickThrough, Converter={NotBoolConverter}}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:VideoItem}}" DataType="{x:Type models:VideoItem}">
+		<editorcontrols:ControlHost>
+			<editorcontrols:VideoView Loop="{Binding Path=LoopVideo}" VideoUrl="{Binding Path=VideoUrl}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:ScreenCaptureItem}}" DataType="{x:Type models:ScreenCaptureItem}">
+		<editorcontrols:ControlHost>
+			<editorcontrols:ScreenCaptureView />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:AnimatedGifItem}}" DataType="{x:Type models:AnimatedGifItem}">
+		<editorcontrols:ControlHost>
+			<Image p14:ImageBehavior.AnimatedSource="{Binding Path=GifFullPath}" xmlns:p14="clr-namespace:AnimatedImage.Wpf;assembly=AnimatedImage.Wpf" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:ETSMap}}" DataType="{x:Type models:ETSMap}">
+		<editorcontrols:ControlHost>
+			<editorcontrols:MapPageView Adress="{Binding Path=MapAddress}" coordinates="{Binding Path=coordinates}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:WidgetItem}}" DataType="{x:Type models:WidgetItem}">
+		<editorcontrols:ControlHost>
+			<local:DashHostControlsRendering ClipToBounds="True" ShownScreen="{Binding Path=Data.Dashboard.SelectedScreen}">
+				<FrameworkElement.LayoutTransform>
+					<ScaleTransform CenterX="0" CenterY="0" ScaleX="{Binding Path=AutoSizeScale}" ScaleY="{Binding Path=AutoSizeScale}" />
+				</FrameworkElement.LayoutTransform>
+			</local:DashHostControlsRendering>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:DebugItem}}" DataType="{x:Type models:DebugItem}">
+		<editorcontrols:ControlHost>
+			<ItemsControl ItemsSource="{Binding Path=data}">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<UniformGrid Columns="6" />
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<Border BorderBrush="#FFFFFFFF" Margin="-1,-1,0,0" BorderThickness="1">
+							<StackPanel Orientation="Vertical" Margin="2">
+								<TextBlock Foreground="#FF000000" FontSize="14" Background="#FFD3D3D3" Margin="-2" Text="{Binding Name}" />
+								<TextBlock Foreground="#FFFFFFFF" FontSize="22" Text="{Binding Value}" />
+							</StackPanel>
+						</Border>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:DialGaugeItem}}" DataType="{x:Type models:DialGaugeItem}">
+		<editorcontrols:ControlHost>
+			<editorcontrols:CircularGaugeCustom />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:GradientItem}}" DataType="{x:Type models:GradientItem}">
+		<editorcontrols:ControlHost>
+			<Rectangle Width="{Binding Path=Width}" Height="{Binding Path=Height}" Fill="{Binding Path=Color}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:RectangleItem}}" DataType="{x:Type models:RectangleItem}">
+		<editorcontrols:ControlHost />
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:IntegratedLedItem}}" DataType="{x:Type models:IntegratedLedItem}">
+		<editorcontrols:ControlHost>
+			<ContentControl Content="{Binding Path=Control}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:CircularGaugeItem}}" DataType="{x:Type models:CircularGaugeItem}">
+		<editorcontrols:ControlHost>
+			<dopascript:CircularProgressBar MinValue="0" MaxValue="360" Height="{Binding Path=Height}" Width="{Binding Path=Width}" StrokeThickness="{Binding Path=StrokeThickness}" Stroke="{Binding Path=CircleGaugeBrush}" BackgroundStroke="{Binding Path=CircleGaugeBackgroundBrush}" MinimumAngle="{Binding Path=MinAngle}" Value="{Binding Path=ValueEx}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:ArcGaugeItem}}" DataType="{x:Type models:ArcGaugeItem}">
+		<editorcontrols:ControlHost>
+			<Grid SnapsToDevicePixels="True">
+				<render:ArcRenderControl SnapsToDevicePixels="True" IsEllipse="{Binding Path=UseEllipse}" Height="{Binding Path=Height}" Width="{Binding Path=Width}" ArcThickness="{Binding Path=ArcThickness}" ArcColor="{Binding Path=CompleteCircleColor}" Visibility="{Binding Path=CompleteCircleEnabled, Converter={SHBoolToVisibilityConverter}}" ImageSource="{Binding Path=CompleteCircleImageSource}" StartAngle="{Binding Path=SweepStartAngle}" SweepAngle="{Binding Path=CompleteCircleSweep}" />
+				<render:ArcRenderControl SnapsToDevicePixels="True" IsEllipse="{Binding Path=UseEllipse}" Height="{Binding Path=Height}" Width="{Binding Path=Width}" ArcThickness="{Binding Path=ArcThickness}" ArcColor="{Binding Path=SweepBackgroundColor}" ImageSource="{Binding Path=SweepBackgroundImageSource}" StartAngle="{Binding Path=BackgroundStartAngle}" SweepAngle="{Binding Path=BackgroundSweep}" />
+				<render:ArcRenderControl SnapsToDevicePixels="True" IsEllipse="{Binding Path=UseEllipse}" Height="{Binding Path=Height}" Width="{Binding Path=Width}" ArcThickness="{Binding Path=ArcThickness}" ArcColor="{Binding Path=SweepColor}" ImageSource="{Binding Path=SweepImageSource}" StartAngle="{Binding Path=SweepStartAngle}" SweepAngle="{Binding Path=ValueSweep}" />
+			</Grid>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:EllipseItem}}" DataType="{x:Type models:EllipseItem}">
+		<editorcontrols:ControlHost>
+			<Grid Width="{Binding Path=Width}" Height="{Binding Path=Height}">
+				<Ellipse Width="{Binding Path=Width}" Height="{Binding Path=Height}" StrokeThickness="{Binding Path=EllipseThickness}" Fill="{Binding Path=FillColor, Converter={local:BrushConverter}}">
+					<Shape.Stroke>
+						<SolidColorBrush Color="{Binding Path=EllipseColor}" />
+					</Shape.Stroke>
+				</Ellipse>
+				<Ellipse Width="{Binding Path=Width}" Height="{Binding Path=Height}" Visibility="{Binding Path=EllipseBackgroundImageData, Converter={IsNullToCollapsedConverter}}" StrokeThickness="{Binding Path=EllipseThickness}">
+					<Shape.Stroke>
+						<SolidColorBrush Color="{Binding Path=EllipseColor}" />
+					</Shape.Stroke>
+					<Shape.Fill>
+						<ImageBrush Stretch="Fill" RenderOptions.CachingHint="Cache" ImageSource="{Binding Path=EllipseBackgroundImageData}" />
+					</Shape.Fill>
+				</Ellipse>
+			</Grid>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:GeneratedStaticMapItem}}" DataType="{x:Type models:GeneratedStaticMapItem}">
+		<editorcontrols:ControlHost ClipToBounds="True">
+			<editorcontrols:StaticMap />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:GeneratedMapItemBase}}" DataType="{x:Type models:GeneratedMapItemBase}">
+		<editorcontrols:ControlHost ClipToBounds="True">
+			<Grid ClipToBounds="True" Width="{Binding Width}" Height="{Binding Height}">
+				<Canvas RenderTransformOrigin="0.5,0.5">
+					<UIElement.RenderTransform>
+						<TransformGroup>
+							<TranslateTransform X="{Binding Path=ttX}" Y="{Binding Path=ttY}" />
+							<RotateTransform CenterX="0" CenterY="0" Angle="{Binding Path=rotationAngle}" />
+							<ScaleTransform ScaleX="{Binding DisplayScale}" ScaleY="{Binding DisplayScale}" />
+						</TransformGroup>
+					</UIElement.RenderTransform>
+					<Image HorizontalAlignment="Left" VerticalAlignment="Top" Source="{Binding Path=ImageData}" />
+					<ItemsControl ItemsSource="{Binding Opponents}">
+						<ItemsControl.ItemsPanel>
+							<ItemsPanelTemplate>
+								<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+							</ItemsPanelTemplate>
+						</ItemsControl.ItemsPanel>
+						<ItemsControl.ItemContainerStyle>
+							<Style TargetType="{x:Type ContentPresenter}">
+								<Setter Property="Panel.ZIndex" Value="{Binding Path=ZIndex}" />
+							</Style>
+						</ItemsControl.ItemContainerStyle>
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<editorcontrols:MapOpponent />
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</Canvas>
+				<Grid VerticalAlignment="Bottom" Margin="10" Visibility="{Binding Path=MapReady, Converter={SHBoolToVisibilityConverter Invert=True}}">
+					<Border Background="#FF000000" Opacity="0.5" CornerRadius="8" />
+					<Label HorizontalAlignment="Center" Margin="5" Foreground="#FFFFFFFF" FontSize="10">
+						<StackPanel>
+							<TextBlock HorizontalAlignment="Center">Waiting for map record</TextBlock>
+							<TextBlock HorizontalAlignment="Center">Please do a valid timed lap</TextBlock>
+						</StackPanel>
+					</Label>
+				</Grid>
+			</Grid>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:OutlinedTextItem}}" DataType="{x:Type models:OutlinedTextItem}">
+		<editorcontrols:ControlHost>
+			<Grid VerticalAlignment="Top" HorizontalAlignment="Left" Width="{Binding Width}" Height="{Binding Height}">
+				<OutlinedTextBlock Margin="{Binding Path=TextPadding.Padding}" FontFamily="{Binding Path=Font, Converter={local:DashFontConverter}}" TextWrapping="{Binding Path=TextWrapping}" FontWeight="{Binding Path=FontWeight}" FontStyle="{Binding Path=FontStyle}" Text="{Binding Path=Text}" VerticalAlignment="{Binding Path=VerticalAlignment}" HorizontalAlignment="{Binding Path=HorizontalAlignment}" FontSize="{Binding Path=FontSize}" StrokeThickness="{Binding Path=StrokeThickness}" Stroke="{Binding Path=StrokeColor, Converter={local:BrushConverter}}" Fill="{Binding Path=FillColor, Converter={local:BrushConverter}}" />
+			</Grid>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="monospacedText">
+		<editorcontrols:ControlHost>
+			<Grid VerticalAlignment="Top" HorizontalAlignment="Left" Width="{Binding Width}" Height="{Binding Height}">
+				<StackPanel Orientation="Horizontal" Margin="{Binding Path=TextPadding.Padding}" HorizontalAlignment="{Binding Path=HorizontalAlignment}" VerticalAlignment="{Binding Path=VerticalAlignment}">
+					<ItemsControl ItemsSource="{Binding Path=MonospacedChars}">
+						<ItemsControl.ItemsPanel>
+							<ItemsPanelTemplate>
+								<StackPanel Orientation="Horizontal" />
+							</ItemsPanelTemplate>
+						</ItemsControl.ItemsPanel>
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<editorcontrols:TextBlockWShadow TextAlignment="Center" TextItem="{Binding Path=DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}}" Foreground="{Binding Path=DataContext.TextColor, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}, Converter={local:BrushConverter}}" FontFamily="{Binding Path=DataContext.Font, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}, Converter={local:DashFontConverter}}" FontWeight="{Binding Path=DataContext.FontWeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}}" FontStyle="{Binding Path=DataContext.FontStyle, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}}" FontSize="{Binding Path=DataContext.FontSize, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}}" Width="{Binding Path=CharWidth}" Text="{Binding Char}" />
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</StackPanel>
+			</Grid>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="defaultText">
+		<editorcontrols:ControlHost>
+			<Grid VerticalAlignment="Top" HorizontalAlignment="Left" Width="{Binding Width}" Height="{Binding Height}">
+				<editorcontrols:TextBlockWShadow TextItem="{Binding}" FontFamily="{Binding Path=Font, Converter={local:DashFontConverter}}" TextWrapping="{Binding Path=TextWrapping}" FontWeight="{Binding Path=FontWeight}" FontStyle="{Binding Path=FontStyle}" Text="{Binding Path=Text}" VerticalAlignment="{Binding Path=VerticalAlignment}" Margin="{Binding Path=TextPadding.Padding}" Foreground="{Binding Path=TextColor, Converter={local:BrushConverter}}" HorizontalAlignment="{Binding Path=HorizontalAlignment}" FontSize="{Binding Path=FontSize}" />
+			</Grid>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<Style x:Key="textTemplateSwitcherStyle" TargetType="{x:Type ContentPresenter}">
+		<Style.Triggers>
+			<DataTrigger Value="False" Binding="{Binding UseMonospacedText}">
+				<Setter Property="ContentTemplate" Value="{StaticResource defaultText}" />
+			</DataTrigger>
+			<DataTrigger Value="True" Binding="{Binding UseMonospacedText}">
+				<Setter Property="ContentTemplate" Value="{StaticResource monospacedText}" />
+			</DataTrigger>
+		</Style.Triggers>
+	</Style>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:TextItem}}" DataType="{x:Type models:TextItem}">
+		<ContentPresenter Style="{StaticResource textTemplateSwitcherStyle}" Content="{Binding}" />
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:ImageItem}}" DataType="{x:Type models:ImageItem}">
+		<editorcontrols:ControlHost>
+			<Image Stretch="Fill" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding Path=ImageData}" Width="{Binding Path=Width}" Height="{Binding Path=Height}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:ImageFromFileItem}}" DataType="{x:Type models:ImageFromFileItem}">
+		<editorcontrols:ControlHost>
+			<Image Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding Path=ImageData}" Width="{Binding Path=Width}" Height="{Binding Path=Height}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:MediaCoverItem}}" DataType="{x:Type models:MediaCoverItem}">
+		<editorcontrols:ControlHost>
+			<Image Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding Path=ImageData}" Width="{Binding Path=Width}" Height="{Binding Path=Height}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:ImageFromUrlItem}}" DataType="{x:Type models:ImageFromUrlItem}">
+		<editorcontrols:ControlHost>
+			<Image Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding Path=ImageData}" Width="{Binding Path=Width}" Height="{Binding Path=Height}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:ToggleImageItem}}" DataType="{x:Type models:ToggleImageItem}">
+		<editorcontrols:ControlHost>
+			<Grid Width="{Binding Path=Width}" Height="{Binding Path=Height}">
+				<Image Stretch="Fill" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding Path=OffImageData}" Width="{Binding Path=Width}" Height="{Binding Path=Height}" Visibility="{Binding Path=ShowOffImage, Converter={SHBoolToVisibilityConverter}}" />
+				<Image Stretch="Fill" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding Path=OnImageData}" Width="{Binding Path=Width}" Height="{Binding Path=Height}" Visibility="{Binding Path=Value, Converter={SHBoolToVisibilityConverter}}" />
+			</Grid>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:ButtonItem}}" DataType="{x:Type models:ButtonItem}">
+		<editorcontrols:ControlHost Background="#00FFFFFF">
+			<editorcontrols:ThreeStateImageButton Background="#00FFFFFF" Cursor="Hand" IsEnabled="{Binding Path=IsEnabled}" IsActivated="{Binding Path=State}">
+				<editorcontrols:ThreeStateImageButton.InnerContent>
+					<local:GroupPresenter ClipToBounds="True" IsHitTestVisible="False" ItemSource="{Binding Path=Childrens}" Width="{Binding Width}" Height="{Binding Height}" />
+				</editorcontrols:ThreeStateImageButton.InnerContent>
+				<i:Interaction.Triggers>
+					<i:EventTrigger EventName="PreviewMouseLeftButtonDown">
+						<i:InvokeCommandAction Command="{Binding ButtonDown}" />
+					</i:EventTrigger>
+					<i:EventTrigger EventName="PreviewMouseLeftButtonUp">
+						<i:InvokeCommandAction Command="{Binding ButtonUp}" />
+					</i:EventTrigger>
+				</i:Interaction.Triggers>
+			</editorcontrols:ThreeStateImageButton>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:GaugeNeedleItem}}" DataType="{x:Type models:GaugeNeedleItem}">
+		<editorcontrols:ControlHost>
+			<Grid Width="{Binding Path=Width}" Height="{Binding Path=Height}">
+				<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RenderTransformOrigin="0.5,0.5">
+					<UIElement.RenderTransform>
+						<RotateTransform Angle="{Binding Path=ActualAngle}" />
+					</UIElement.RenderTransform>
+					<Image Stretch="None" HorizontalAlignment="Right" VerticalAlignment="Center" RenderTransformOrigin="1,0.5" Source="{Binding Path=ImageData}">
+						<UIElement.RenderTransform>
+							<TransformGroup>
+								<ScaleTransform ScaleX="{Binding Path=AutoSizeScale}" ScaleY="{Binding Path=AutoSizeScale}" />
+							</TransformGroup>
+						</UIElement.RenderTransform>
+					</Image>
+				</Grid>
+				<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Opacity="0.5" RenderTransformOrigin="0.5,0.5">
+					<UIElement.RenderTransform>
+						<RotateTransform Angle="{Binding Path=MinimumAngle}" />
+					</UIElement.RenderTransform>
+					<Image Stretch="None" HorizontalAlignment="Right" VerticalAlignment="Center" RenderTransformOrigin="1,0.5" Source="{Binding Path=ImageData}" Visibility="{Binding Path=DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=Viewbox}, Converter={SHBoolToVisibilityConverter}}">
+						<UIElement.RenderTransform>
+							<TransformGroup>
+								<ScaleTransform ScaleX="{Binding Path=AutoSizeScale}" ScaleY="{Binding Path=AutoSizeScale}" />
+							</TransformGroup>
+						</UIElement.RenderTransform>
+					</Image>
+				</Grid>
+				<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Opacity="0.5" RenderTransformOrigin="0.5,0.5">
+					<UIElement.RenderTransform>
+						<RotateTransform Angle="{Binding Path=MaximumAngle}" />
+					</UIElement.RenderTransform>
+					<Image Stretch="None" HorizontalAlignment="Right" VerticalAlignment="Center" RenderTransformOrigin="1,0.5" Source="{Binding Path=ImageData}" Visibility="{Binding Path=DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=Viewbox}, Converter={SHBoolToVisibilityConverter}}">
+						<UIElement.RenderTransform>
+							<TransformGroup>
+								<ScaleTransform ScaleX="{Binding Path=AutoSizeScale}" ScaleY="{Binding Path=AutoSizeScale}" />
+							</TransformGroup>
+						</UIElement.RenderTransform>
+					</Image>
+				</Grid>
+				<Grid HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding Path=DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=Viewbox}, Converter={SHBoolToVisibilityConverter}}">
+					<Border Width="5" Height="5" Margin="-1" Background="#FFFF0000" BorderThickness="2" BorderBrush="#FF0000FF" />
+				</Grid>
+			</Grid>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="horizontalLinearGauge">
+		<editorcontrols:ControlHost>
+			<render:HorizontalGauge HorizontalAlignment="Left" VerticalAlignment="Top" Percent="{Binding Path=Percent}" BackgroundImage="{Binding Path=ImageData}" GaugeImage="{Binding Path=ProgressBarImageData}" HorizontalGaugeAlignment="{Binding Path=HorizontalGaugeAlignment}" Width="{Binding Width}" FillColor="{Binding Path=CurrentGaugeColor}" Height="{Binding Height}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<DataTemplate x:Key="verticalLinearGauge">
+		<editorcontrols:ControlHost>
+			<render:VerticalGauge HorizontalAlignment="Left" VerticalAlignment="Top" Percent="{Binding Path=Percent}" BackgroundImage="{Binding Path=ImageData}" GaugeImage="{Binding Path=ProgressBarImageData}" VerticalGaugeAlignment="{Binding Path=VerticalGaugeAlignment}" Width="{Binding Width}" FillColor="{Binding Path=CurrentGaugeColor}" Height="{Binding Height}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<Style x:Key="linearGaugeTemplateSwitcherStyle" TargetType="{x:Type ContentPresenter}">
+		<Setter Property="ContentTemplate" Value="{StaticResource horizontalLinearGauge}" />
+		<Style.Triggers>
+			<DataTrigger Value="True" Binding="{Binding IsVertical}">
+				<Setter Property="ContentTemplate" Value="{StaticResource verticalLinearGauge}" />
+			</DataTrigger>
+		</Style.Triggers>
+	</Style>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:LinearGaugeItem}}" DataType="{x:Type models:LinearGaugeItem}">
+		<ContentPresenter Style="{StaticResource linearGaugeTemplateSwitcherStyle}" Content="{Binding}" />
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:LapDeltaOverviewItem}}" DataType="{x:Type models:LapDeltaOverviewItem}">
+		<editorcontrols:ControlHost>
+			<Grid Width="{Binding Width}" Height="{Binding Height}">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<ContentControl HorizontalAlignment="Left" VerticalAlignment="Bottom" ClipToBounds="True" Height="{Binding Path=PixelValue}">
+					<Grid>
+						<Grid VerticalAlignment="Bottom" ClipToBounds="True" Width="{Binding Width}" Height="{Binding Height}">
+							<Panel.Background>
+								<SolidColorBrush Color="DarkGray" />
+							</Panel.Background>
+						</Grid>
+						<Grid VerticalAlignment="Bottom" ClipToBounds="True" Width="{Binding Width}" Height="{Binding TrackPositionPixels}">
+							<Panel.Background>
+								<SolidColorBrush Color="White" />
+							</Panel.Background>
+						</Grid>
+					</Grid>
+				</ContentControl>
+				<ItemsControl Opacity="1" Margin="6,0,6,0" ItemsSource="{Binding Path=Sectors}">
+					<ItemsControl.ItemsPanel>
+						<ItemsPanelTemplate>
+							<UniformGrid Columns="1" Rows="{Binding Path=SectorsCount}" />
+						</ItemsPanelTemplate>
+					</ItemsControl.ItemsPanel>
+					<ItemsControl.ItemTemplate>
+						<DataTemplate>
+							<Border>
+								<Border.Background>
+									<SolidColorBrush Color="{Binding}" />
+								</Border.Background>
+							</Border>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</Grid>
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+	<ControlTemplate x:Key="MyItemsTemplate" TargetType="{x:Type ItemsControl}">
+		<ItemsPresenter Width="{Binding Owner.BaseWidth}" Height="{Binding Owner.BaseHeight}" />
+	</ControlTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:Layer}}" DataType="{x:Type models:Layer}">
+		<Grid RenderTransform="{Binding Path=RenderTransform}">
+			<local:LayerPresenter ItemSource="{Binding Path=Childrens}" RepeatItemSource="{Binding Path=RepeatedItems}" Opacity="{Binding Path=OpacityEx}" Width="{Binding Owner.BaseWidth}" Height="{Binding Owner.BaseHeight}" />
+		</Grid>
+	</DataTemplate>
+	<DataTemplate x:Key="{DataTemplateKey {x:Type models:GroupBase}}" DataType="{x:Type models:GroupBase}">
+		<editorcontrols:ControlHost>
+			<local:GroupPresenter ClipToBounds="True" ItemSource="{Binding Path=Childrens}" Width="{Binding Width}" Height="{Binding Height}" />
+		</editorcontrols:ControlHost>
+	</DataTemplate>
+</ResourceDictionary>

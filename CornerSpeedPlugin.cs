@@ -1,15 +1,19 @@
 ﻿using FMOD.Studio;
 using GameReaderCommon;
+using iRacingSDK;
 using MahApps.Metro.Controls;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PropertyChanged;
+using SimHub;
 using SimHub.Plugins;
 using SimHub.Plugins.ChartingWindow;
 using SimHub.Plugins.Dashstudio.Behaviors.Core.Interfaces;
 using SimHub.Plugins.DataPlugins.DataCore;
 using SimHub.Plugins.Devices.DevicesExtensionsDummy;
 using SimHub.Plugins.Devices.Registry.Impl.TurtleBeach.UI;
+using SimHub.Plugins.OutputPlugins.ControlRemapper;
+using SimHub.Plugins.OutputPlugins.Dash.GLCDTemplating;
 using SimHub.Plugins.OutputPlugins.Dash.WPFUI;
 using SimHub.Plugins.OutputPlugins.EditorControls;
 using SimHub.Plugins.OutputPlugins.GraphicalDash;
@@ -69,7 +73,7 @@ namespace User.CornerSpeed
     public class Corner : Turn, INotifyPropertyChanged
     {
 
-        private static PluginManager PluginManager;
+        public static PluginManager PluginManager;
         private static int IncidentCount = -1;
 
         public Corner()
@@ -96,14 +100,14 @@ namespace User.CornerSpeed
 
         public bool init { get; set; } = false;
 
-        public TimeSpan start_time { get; set; }
+        public DateTime start_time { get; set; }
 
-        public TimeSpan end_time { get; set; }
+        public DateTime end_time { get; set; }
         
         /// <summary>
         /// The session time when the min_speed occured
         /// </summary>
-        public TimeSpan min_time { get; set; }
+        public DateTime min_time { get; set; }
         
         /// <summary>
         /// The track dist where the min_speed occured
@@ -119,16 +123,19 @@ namespace User.CornerSpeed
         [JsonIgnore]
         public bool Valid { get; set; } = true;
 
+        [JsonIgnore]
+        public double curr_dist { get; set; } = 0.0;
+
         public ObservableCollection<TimeSpan> markers = [];
         
         public void Start()
         {
             Active = true;
-            start_time = TimeSpan.FromSeconds(Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionTime")));
+            start_time = GetTime();
             start_speed = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameData.SpeedLocal"));
 
             // reset vars
-            end_time = TimeSpan.FromSeconds(Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionTime")));
+            end_time = start_time;
             min_speed = 999.9;
             Valid = true;
 
@@ -137,16 +144,26 @@ namespace User.CornerSpeed
             //markers = [.. new TimeSpan[((int)((end - start) / distance_per_marker))]];
         }
 
-        public void Update()
+        public DateTime GetTime()
         {
-            var session_time = TimeSpan.FromSeconds(Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionTime")));
+            //TimeSpan.FromSeconds(Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionTime")));
+            return Convert.ToDateTime(PluginManager.GetPropertyValue("DataCorePlugin.GameData.PacketTime"));
+            //return dataBase.PacketTime;
+        }
+
+        public void Update(GameData data)
+        {
+            var session_time = GetTime();
             var time = session_time - start_time;
-            var dist = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapDist"));
+            //var dist = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapDist"));
+            var dist = data.NewData.TrackPositionMeters;
             var length = dist - start;
             if (start > end)
             {
-                length += Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameData.TrackLength"));
+                //length += Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameData.TrackLength"));
+                length += data.NewData.TrackLength;
             }
+            curr_dist = length;
             var index = (int)((length) / distance_per_marker);
             //markers[(int)((dist - start) / distance_per_marker)] = time;
             if (markers.Count < index)
@@ -160,29 +177,31 @@ namespace User.CornerSpeed
                 Valid = false;
             }
             IncidentCount = incidentCount;
-            var black_flag = Convert.ToInt32(PluginManager.GetPropertyValue("DataCorePlugin.GameData.Flag_Black"));
+            //var black_flag = Convert.ToInt32(PluginManager.GetPropertyValue("DataCorePlugin.GameData.Flag_Black"));
+            var black_flag = data.NewData.Flag_Black;
             if (black_flag > 0)
             {
                 Valid = false;
             }
-
-            var speed = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameData.SpeedLocal"));
+            
+            //var speed = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameData.SpeedLocal"));
+            var speed = data.NewData.SpeedLocal;
             if (speed < min_speed)
             {
                 min_speed = speed;
-                min_time = TimeSpan.FromSeconds(Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionTime")));
-                min_dist = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapDist"));
+                min_time = session_time;
+                min_dist = dist;
             }
 
-            end_time = TimeSpan.FromSeconds(Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionTime")));
-            end_speed = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameData.SpeedLocal"));
+            end_time = session_time;
+            end_speed = speed;
         }
 
         public void End()
         {
             Active = false;
             init = true;
-            var time = TimeSpan.FromSeconds(Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionTime")));
+            var time = GetTime();
             
             end_time = time;
             var speed = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameData.SpeedLocal"));            
@@ -233,7 +252,7 @@ namespace User.CornerSpeed
         public TimeSpan Duration => Corner.Duration;
         public TimeSpan DurationDelta => (IsActive) ? LiveDelta : Corner.Duration - (ComparisonCorners[Mode]?.Duration ?? TimeSpan.Zero);
         public TimeSpan Apex => Corner.min_time - Corner.start_time;
-        public TimeSpan ApexDelta => (Corner.min_time - Corner.start_time) - ((ComparisonCorners[Mode]?.min_time ?? TimeSpan.Zero) - (ComparisonCorners[Mode]?.start_time ?? TimeSpan.Zero));
+        public TimeSpan ApexDelta => (Corner.min_time - Corner.start_time) - ((ComparisonCorners[Mode]?.min_time ?? DateTime.UtcNow) - (ComparisonCorners[Mode]?.start_time ?? DateTime.UtcNow));
         public double ApexDist => Corner.min_dist - Corner.start;
         public double ApexDistDelta => (Corner.min_dist - Corner.start) - ((ComparisonCorners[Mode]?.min_dist ?? 0.0) - (ComparisonCorners[Mode]?.start ?? 0.0));
         public bool WasShortestDuration => !IsActive && Corner.Duration < (ComparisonCorners[Mode]?.Duration ?? TimeSpan.Zero);
@@ -242,17 +261,48 @@ namespace User.CornerSpeed
         public bool IsActive => Corner.Active;
         public bool Latest { get; set; } = true;
 
+        //public TimeSpan LiveDelta { get {
+        //        if (Corner.markers.Count > 0) {
+        //            var comp = ComparisonCorners[Mode];
+        //            var index = Corner.markers.Count - 1;
+        //            if (comp != null && comp.markers.Count > index) {
+        //                return Corner.markers[index] - comp.markers[index];
+        //            }
+        //        }
+        //        return TimeSpan.Zero;
+        //    }
+        //}
+
         public TimeSpan LiveDelta { get {
-                if (Corner.markers.Count > 0) {
-                    var comp = ComparisonCorners[Mode];
-                    var index = Corner.markers.Count - 1;
-                    if (comp != null && comp.markers.Count > index) {
-                        return Corner.markers[index] - comp.markers[index];
+            var time = TimeSpan.Zero;
+            var comp_time = TimeSpan.Zero;
+            var comp = ComparisonCorners[Mode];
+
+            if (Corner.markers.Count > 0 && comp != null)
+            {
+                var last = Corner.markers.Count - 1;
+                var diff = DateTime.UtcNow - Corner.start_time;
+                time += diff;
+                if (comp.markers.Count > last) {                          
+                    if (comp.markers.Count > (last + 1))
+                    {
+                        // interpolate the current distance to a time for comparison lap
+                        //var dist = Convert.ToDouble(Corner.PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapDist"));  
+                        //var index_f = ((dist - Corner.start) / Corner.distance_per_marker) % 1.0;
+                        var index_f = (Corner.curr_dist / Corner.distance_per_marker) % 1.0;
+                        var comp_curr = comp.markers[last];
+                        var comp_next = comp.markers[last + 1];
+                        var add = (comp_curr.TotalSeconds * (1.0 - index_f)) + (comp_next.TotalSeconds * index_f);
+                        comp_time = TimeSpan.FromSeconds(comp_time.TotalSeconds + add);
+                    } 
+                    else 
+                    { 
+                        comp_time += comp.markers[last];
                     }
                 }
-                return TimeSpan.Zero;
-            }
-        }
+            } 
+            return time - comp_time;
+        } }
 
         public CornerViewModel()
         {
@@ -272,54 +322,81 @@ namespace User.CornerSpeed
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (sender is Corner) {
-                PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() => 
-                {
-                    if (e.PropertyName == "Duration") {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Duration"));
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("DurationDelta"));
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("WasShortestDuration"));
-                    }
-                    if (e.PropertyName == "marker") {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("DurationDelta"));
-                    }
-                    else if (e.PropertyName == "Valid")
+                if (e.PropertyName == nameof(Corner.Duration)) {
+                    PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() =>
                     {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsInvalid"));
-                    }
-                    else if (e.PropertyName == "Active")
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Duration)));
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DurationDelta)));
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(WasShortestDuration)));
+                    });
+                }
+                if (e.PropertyName == nameof(Corner.markers)) {
+                    PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() =>
                     {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsActive"));
-                    }
-                    else if (e.PropertyName == "min_speed")
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DurationDelta)));
+                    });
+                }
+                else if (e.PropertyName == nameof(Corner.Valid))
+                {                    
+                    PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() =>
                     {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("MinSpeed"));
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("MinSpeedDelta"));
-                    }
-                    else if (e.PropertyName == "min_time")
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsInvalid)));
+                    });
+                }
+                else if (e.PropertyName == nameof(Corner.Active))
+                {                    
+                    PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() =>
                     {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Apex"));
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ApexDelta"));
-                    }
-                    else if (e.PropertyName == "min_dist")
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsActive)));
+                    });
+                }
+                else if (e.PropertyName == nameof(Corner.min_speed))
+                {                    
+                    PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() =>
                     {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ApexDist"));
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ApexDistDelta"));
-                    }
-                    else if (e.PropertyName == "end_speed")
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MinSpeed)));
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MinSpeedDelta)));
+                    });
+                }
+                else if (e.PropertyName == nameof(Corner.min_time))
+                {                    
+                    PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() =>
                     {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("EndSpeed"));
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("EndSpeedDelta"));
-                    }
-                    else if (e.PropertyName == "init")
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Apex)));
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ApexDelta)));
+                    });
+                }
+                else if (e.PropertyName == nameof(Corner.min_dist))
+                {                    
+                    PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() =>
                     {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsNewEntry"));
-                    }
-                });
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ApexDist)));
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ApexDistDelta)));
+                    });
+                }
+                else if (e.PropertyName == nameof(Corner.end_speed))
+                {                    
+                    PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() =>
+                    {
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EndSpeed)));
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EndSpeedDelta)));
+                    });
+                }
+                else if (e.PropertyName == nameof(Corner.init))
+                {                    
+                    PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() =>
+                    {
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsNewEntry)));
+                    });
+                }
             } else {
-                PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() =>
-                { 
-                    PropertyChanged?.Invoke(this, e);
-                });
+                if (System.Windows.Application.Current.Dispatcher.CheckAccess()) {
+                    PropertyChanged?.Invoke(sender, e);
+                } else { 
+                    PluginManager.GetInstance().UIUpdateDispatcher.Dispatcher.Invoke(() => { 
+                        PropertyChanged?.Invoke(sender, e);
+                    });
+                }
             }
         }
 
@@ -356,7 +433,15 @@ namespace User.CornerSpeed
 
     public static class MyEnumExtensions
     {
-        public static string ToDescriptionString(this ComparisonMode val)
+        //public static string ToDescriptionString(this ComparisonMode val)
+        //{
+        //    DescriptionAttribute[] attributes = (DescriptionAttribute[])val
+        //       .GetType()
+        //       .GetField(val.ToString())
+        //       .GetCustomAttributes(typeof(DescriptionAttribute), false);
+        //    return attributes.Length > 0 ? attributes[0].Description : string.Empty;
+        //}
+        public static string ToDescriptionString(this Enum val)
         {
             DescriptionAttribute[] attributes = (DescriptionAttribute[])val
                .GetType()
@@ -378,13 +463,22 @@ namespace User.CornerSpeed
         Count
     };
 
+    public enum InputMode {
+        [Description("Car")]        Car,
+        //[Description("Car2")]       Car2,
+        [Description("Pitting")]    Pitting,
+        [Description("Chat")]       Chat,
+        //[Description("BlackBox")]   BlackBox,
+
+        Count
+    };
+
     [PluginDescription("My plugin description")]
     [PluginAuthor("Jack Humbert")]
     [PluginName("Corner Speed")]
-    [AddINotifyPropertyChangedInterface]
-    public class CornerSpeedPlugin : IPlugin, IDataPlugin, IWPFSettingsV2
+    public class CornerSpeedPlugin : IPlugin, IDataPlugin, IWPFSettingsV2, INotifyPropertyChanged
     {
-        private static readonly Program program = new Program();
+        private static Program program;
 
         public CornerSpeedPluginSettings Settings;
         
@@ -414,16 +508,101 @@ namespace User.CornerSpeed
 
         //public int CurrentCorner = -1;
         //public int LastCorner = -1;
-
-        public List<List<Corner>> CornerSpeeds;
         
         public TimeSpan CornerDelta;
+        
+        private double lastLiveDelta = 0.0;
+        private DateTime lastLiveDeltaTimestamp = DateTime.UtcNow;
+        public double DLiveDelta { get
+        {
+            var now = DateTime.UtcNow;
+            var d = (LiveDelta - lastLiveDelta) / (now - lastLiveDeltaTimestamp).TotalSeconds;
+            lastLiveDelta = LiveDelta;
+            lastLiveDeltaTimestamp = now;
+            return d;
+        } }
+        
+        public double LiveDelta { get {
+            var time = TimeSpan.Zero;
+            var comp_time = TimeSpan.Zero;
+            if (CurrentCornerSpeeds == null || CornersToCompare == null || CurrentCornerSpeeds.Count != CornersToCompare.Count)
+                return -1.23;
+            for (int i = 0; i < CurrentCornerSpeeds.Count; i++)
+            {
+                if (CurrentCornerSpeeds[i] == null || CornersToCompare[i] == null)
+                    continue;
+                if (CurrentCornerSpeeds[i].Active && CurrentCornerSpeeds[i].markers.Count > 0)
+                {
+                    var last = CurrentCornerSpeeds[i].markers.Count - 1;
+                    var diff = DateTime.UtcNow - CurrentCornerSpeeds[i].start_time;
+                    time += diff;
+                    if (CornersToCompare[i].markers.Count > last) {                          
+                        if (CornersToCompare[i].markers.Count > (last + 1))
+                        {
+                            // interpolate the current distance to a time for comparison lap
+                            //var dist = Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.LapDist"));  
+                            var index_f = (CurrentCornerSpeeds[i].curr_dist / CurrentCornerSpeeds[i].distance_per_marker) % 1.0;
+                            //var index_f = ((dist - CurrentCornerSpeeds[i].start) / CurrentCornerSpeeds[i].distance_per_marker) % 1.0;
+                            var comp_curr = CornersToCompare[i].markers[last];
+                            var comp_next = CornersToCompare[i].markers[last + 1];
+                            var add = (comp_curr.TotalSeconds * (1.0 - index_f)) + (comp_next.TotalSeconds * index_f);
+                            comp_time = TimeSpan.FromSeconds(comp_time.TotalSeconds + add);
+                        } 
+                        else 
+                        { 
+                            comp_time += CornersToCompare[i].markers[last];
+                        }
+                    }
+                    break;
+                } 
+                else
+                {
+                    if (Settings.WholeLapDelta == 0) {
+                        time += CurrentCornerSpeeds[i].Duration;
+                        comp_time += CornersToCompare[i]?.Duration ?? TimeSpan.Zero;
+                    }
+                }
+            }
+            return (time - comp_time).TotalSeconds;
+        } }
 
-        //public TimeSpan OverallDelta { get
-        //    {
+        // half-second average?
+        private double[] liveDelta5Storage = new double[30];
+        private int liveDelta5StorageIndex = 0;
 
-        //    }
-        //}
+        public double LiveDelta5 { get
+        {
+            liveDelta5Storage[liveDelta5StorageIndex] = LiveDelta;
+            liveDelta5StorageIndex = (liveDelta5StorageIndex + 1) % 30;
+            double sum = 0.0;
+            for (int i = 0; i < 30; i++)
+                    sum += liveDelta5Storage[i];
+            return sum / 30.0;
+        } }
+
+        private double lastLiveDelta5 = 0.0;
+        private DateTime lastLiveDelta5Timestamp = DateTime.UtcNow;
+        public double DLiveDelta5 { get
+        {
+            var now = DateTime.UtcNow;
+            var d = (LiveDelta5 - lastLiveDelta5) / (now - lastLiveDelta5Timestamp).TotalSeconds;
+            lastLiveDelta5 = LiveDelta5;
+            lastLiveDelta5Timestamp = now;
+            return d; // / 10.0;
+        } }
+
+        private double[] dLiveDelta5Storage = new double[30];
+        private int dLiveDelta5StorageIndex = 0;
+
+        public double D5LiveDelta5 { get
+        {
+            dLiveDelta5Storage[dLiveDelta5StorageIndex] = DLiveDelta5;
+            dLiveDelta5StorageIndex = (dLiveDelta5StorageIndex + 1) % 30;
+            double sum = 0.0;
+            for (int i = 0; i < 30; i++)
+                    sum += dLiveDelta5Storage[i];
+            return sum / 30.0;
+        } }
         
         
         [AlsoNotifyFor("OptimalCornerSpeedsLap")]
@@ -433,35 +612,32 @@ namespace User.CornerSpeed
 
         [AlsoNotifyFor("OptimalCornerSpeedsLap")]
         public ObservableCollection<Corner> BestSessionCornerSpeeds;
-
+        
         public ObservableCollection<Corner> CurrentCornerSpeeds;
 
-        private ComparisonMode _mode = ComparisonMode.CompareToBestCarLap;
-
-        
-        [AlsoNotifyFor("OptimalCornerSpeedsLap")]
-        public ComparisonMode Mode { 
-            get => _mode; 
-            set { 
-                //var oldCorners = CornersToCompare;
-                _mode = value;
-                //var new_attempts = new List<CornerViewModel>();
-                for (int i = 0; i < CornerAttempts.Count; i++)
-                {
-                    //var turn_index = CornerAttempts[i].TurnIndex;
-                    //CornerAttempts[i] = new CornerViewModel(CornerAttempts[i], oldCorners[turn_index], CornersToCompare[turn_index]);
-                    CornerAttempts[i].Mode = value;
-                    //CornerAttempts[i].UpdateComparison(CornersToCompare[turn_index]);
-                    //new_attempts.Add(new CornerViewModel(CurrentCornerSpeeds[turn_index], CornersToCompare[turn_index]));
-                }
-                //CornerAttempts.Clear();
-                //CornerAttempts.AddAll(new_attempts);
-            } 
-        }
+        //[AlsoNotifyFor("OptimalCornerSpeedsLap")]
+        //public ComparisonMode Mode { 
+        //    get => Settings.Mode; 
+        //    set { 
+        //        //var oldCorners = CornersToCompare;
+        //        Settings?.Mode = value;
+        //        //var new_attempts = new List<CornerViewModel>();
+        //        for (int i = 0; i < CornerAttempts.Count; i++)
+        //        {
+        //            //var turn_index = CornerAttempts[i].TurnIndex;
+        //            //CornerAttempts[i] = new CornerViewModel(CornerAttempts[i], oldCorners[turn_index], CornersToCompare[turn_index]);
+        //            CornerAttempts[i].Mode = value;
+        //            //CornerAttempts[i].UpdateComparison(CornersToCompare[turn_index]);
+        //            //new_attempts.Add(new CornerViewModel(CurrentCornerSpeeds[turn_index], CornersToCompare[turn_index]));
+        //        }
+        //        //CornerAttempts.Clear();
+        //        //CornerAttempts.AddAll(new_attempts);
+        //    } 
+        //}
 
         public ObservableCollection<Corner> CornersToCompare { get
             {
-                switch (Mode)
+                switch (Settings.Mode)
                 {
                     case ComparisonMode.CompareToComparisonLap: 
                         if (ComparisonLapSectors.Count > 0) 
@@ -486,34 +662,12 @@ namespace User.CornerSpeed
 
         public string TrackId { get; set; }
                
-        public double[] CornerPositions = {
-            0.055,
-            0.150,
-            0.166,
-            0.183,
-            0.348,
-            0.358,
-            0.380,
-            0.431,
-            0.439,
-            0.471,
-            0.550,
-            0.584,
-            0.647,
-            0.664,
-            0.707,
-            0.745,
-            0.887,
-            0.966,
-            0.972
-        };
-        
-        public List<Sector> ComparisonLapSectors;
+        public List<Sector> ComparisonLapSectors = [];
         public ObservableCollection<Corner> ComparisonLapCorners;
 
         public bool GamePaused = false;
 
-        public iRacingTurnNumbers TurnNumbers;
+        public iRacingTurnNumbers TurnNumbers = new();
 
         public void UpdateTurnNumbers(string trackId)
         {
@@ -548,7 +702,7 @@ namespace User.CornerSpeed
             get {
                 var sum = TimeSpan.Zero;
 
-                foreach (TimeSpan value in CornersToCompare.Select(o => o.Duration)) {
+                foreach (TimeSpan value in CornersToCompare.Select(o => o?.Duration ?? TimeSpan.Zero)) {
                     sum += value;
                 }
                 return sum;
@@ -571,7 +725,7 @@ namespace User.CornerSpeed
             // Define the value of our property (declared in init)
             if (data.GameRunning)
             {
-                if (data.OldData != null && data.NewData != null)
+                if (data.OldData != null && data.NewData != null && false)
                 {
                     var timeValid = true;
                     //if (data.OldData.LapInvalidated || data.NewData.LapInvalidated)
@@ -608,7 +762,7 @@ namespace User.CornerSpeed
                             CurrentCornerSpeeds = new ObservableCollection<Corner>(TurnNumbers.turns.Select((o, i) => new Corner(o, i)));
                             BestSessionCornerSpeeds = new ObservableCollection<Corner>(TurnNumbers.turns.Select((o, i) => new Corner(o, i)));
                         }
-                        Mode = _mode;
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("OptimalCornerSpeedsLap"));
                     }
 
 
@@ -648,15 +802,6 @@ namespace User.CornerSpeed
                         LapNumbers[CurrentLap % NumberOfLaps] = CurrentLap;
 
                         CurrentLap = data.NewData.CurrentLap;
-                        for (int corner_i = 0; corner_i < NumberOfCorners; corner_i++) {
-                            if (corner_i < TurnNumbers.turns.Count)
-                            {
-                                CornerSpeeds[CurrentLap % NumberOfLaps][corner_i] = new Corner(TurnNumbers.turns[corner_i], corner_i);
-                            } else
-                            {
-                                CornerSpeeds[CurrentLap % NumberOfLaps][corner_i] = new Corner();
-                            }
-                        }
                         for (int sector_i = 0; sector_i < NumberOfSectors; sector_i++) {
                             SectorTimes[CurrentLap % NumberOfLaps][sector_i] = new TimeSpan();
                         }
@@ -678,7 +823,7 @@ namespace User.CornerSpeed
                     for (int i = 0; i < CurrentCornerSpeeds.Count; i++)
                     {
                         var corner = CurrentCornerSpeeds[i];
-                        if (corner.Active)
+                        if (corner.Active || !timeValid)
                             continue;
                         if ((corner.end > corner.start && data.NewData.TrackPositionMeters >= corner.start && data.NewData.TrackPositionMeters < corner.end) || 
                             (corner.end < corner.start && data.NewData.TrackPositionMeters >= corner.start))
@@ -702,7 +847,7 @@ namespace User.CornerSpeed
                             pluginManager.UIUpdateDispatcher.Dispatcher.Invoke(() => { 
                                 if (CornerAttempts.Count > 1)
                                     CornerAttempts[1].Latest = false;
-                                CornerAttempts.Insert(0, new CornerViewModel(corner, Mode, new Dictionary<ComparisonMode, Corner> {
+                                CornerAttempts.Insert(0, new CornerViewModel(corner, Settings.Mode, new Dictionary<ComparisonMode, Corner> {
                                     [ComparisonMode.CompareToBestCarLap] = BestCarCornerSpeeds[TrackId][corner.Index].Copy(),
                                     [ComparisonMode.CompareToBestSessionCarLap] = BestSessionCornerSpeeds[corner.Index].Copy(),
                                     [ComparisonMode.CompareToComparisonLap] = ComparisonLapCorners?[corner.Index].Copy() ?? null
@@ -737,26 +882,16 @@ namespace User.CornerSpeed
                                 corner.Valid = false;
                             corner.End();
 
-                            //pluginManager.UIUpdateDispatcher.Dispatcher.Invoke(() => { 
-                            //    CornerAttempts.Insert(0, new CornerViewModel(corner.Copy(), new Dictionary<ComparisonMode, Corner> {
-                            //        [ComparisonMode.CompareToBestCarLap] = BestCarCornerSpeeds[TrackId][corner.Index].Copy(),
-                            //        [ComparisonMode.CompareToBestSessionCarLap] = BestSessionCornerSpeeds[corner.Index].Copy(),
-                            //        [ComparisonMode.CompareToComparisonLap] = ComparisonLapCorners?[corner.Index].Copy() ?? null
-                            //    }));
-                            //    // show last corner to last lap's same corner
-                            //    while (CornerAttempts.Count > (TurnNumbers.turns.Count + 1))
-                            //    {
-                            //        CornerAttempts.RemoveAt(CornerAttempts.Count - 1);
-                            //    }
-                            //});
                             if (corner.Valid) {
                                 if (!BestSessionCornerSpeeds[corner.Index].init || BestSessionCornerSpeeds[corner.Index].Duration > corner.Duration)
                                 {
                                     BestSessionCornerSpeeds[corner.Index] = corner.Copy();
+                                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("OptimalCornerSpeedsLap"));
                                 }
                                 if (!BestCarCornerSpeeds[TrackId][corner.Index].init || BestCarCornerSpeeds[TrackId][corner.Index].Duration > corner.Duration) 
                                 {
                                     BestCarCornerSpeeds[TrackId][corner.Index] = corner.Copy();
+                                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("OptimalCornerSpeedsLap"));
                                     pluginManager.UIUpdateDispatcher.Dispatcher.Invoke(() => { 
                                         this.SaveCommonSettings(CarId, BestCarCornerSpeeds);
                                     });
@@ -766,96 +901,21 @@ namespace User.CornerSpeed
                         }
                     }
                     
+                    //var update = false;
                     for (int i = 0; i < CurrentCornerSpeeds.Count; i++)
                     //foreach (var corner in CurrentCornerSpeeds.Where(o => o.Active))
                     {
                         //pluginManager.UIUpdateDispatcher.Dispatcher.Invoke(() => { 
-                        if (CurrentCornerSpeeds[i].Active)
-                            CurrentCornerSpeeds[i].Update();
+                        if (CurrentCornerSpeeds[i].Active) { 
+                            CurrentCornerSpeeds[i].Update(data);
+                            //update = true;
+                        }
                         //});
                     }
-
-                    /*
-
-                    //if (CurrentCorner != -1)
-                    for (int i = 0; i < TurnNumbers.turns.Count; i++)
-                    {
-                        if (data.NewData.TrackPositionMeters >= TurnNumbers.turns[i].start && data.NewData.TrackPositionMeters < TurnNumbers.turns[i].end)
-                        {
-                            newCorner = i;
-                            break;
-                        }
-                    }
-                    if (CurrentCorner != newCorner) {
-                        if (CurrentCorner != -1) {
-                            // end corner
-                            CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].end_speed = data.NewData.SpeedLocal;
-                            //CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].end_time = data.NewData.CurrentLapTime;
-                            CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].end_time = TimeSpan.FromSeconds(Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionTime")));
-
-                            this.TriggerEvent("CornerEnd");
-
-                            CornerDelta = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].Duration - BestSessionCornerSpeeds[CurrentCorner].Duration;
-                            bool shortest = false;
-                            if (BestSessionCornerSpeeds[CurrentCorner].Duration > CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].Duration)
-                            {
-                                BestSessionCornerSpeeds[CurrentCorner] = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner];
-                            }
-                            var comparisonCorner = CornersToCompare[CurrentCorner];
-                            bool isNewEntry = comparisonCorner.end_time == TimeSpan.MaxValue;
-
-                            if (BestCarCornerSpeeds[TrackId][CurrentCorner].Duration > CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].Duration)
-                            {
-                                BestCarCornerSpeeds[TrackId][CurrentCorner] = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner];
-                                this.SaveCommonSettings(CarId, BestCarCornerSpeeds);
-                                this.TriggerEvent("NewBestCornerTime");
-                                shortest = true;
-                            }
-                            pluginManager.UIUpdateDispatcher.Dispatcher.Invoke(() => { 
-                                CornerAttempts.Insert(0, new CornerViewModel
-                                {
-                                    TurnName = TurnNumbers.turns[CurrentCorner].name,
-                                    StartSpeed = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].start_speed,
-                                    MinSpeed = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].min_speed,
-                                    EndSpeed = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].end_speed,
-                                    StartSpeedDelta = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].start_speed - comparisonCorner.start_speed,
-                                    MinSpeedDelta = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].min_speed - comparisonCorner.min_speed,
-                                    EndSpeedDelta = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].end_speed - comparisonCorner.end_speed,
-                                    Duration = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].Duration,
-                                    DurationDelta = CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].Duration - comparisonCorner.Duration,
-                                    WasShortestDuration = shortest,
-                                    IsNewEntry = isNewEntry
-                                });
-                                // show last corner to last lap's same corner
-                                while (CornerAttempts.Count > (TurnNumbers.turns.Count + 1))
-                                {
-                                    CornerAttempts.RemoveAt(CornerAttempts.Count - 1);
-                                }
-                            });
-                        }
-                        if (newCorner != -1) {
-                            // start corner
-                            CornerSpeeds[CurrentLap % NumberOfLaps][newCorner] = new Corner
-                            {
-                                start_speed = data.NewData.SpeedLocal,
-                                //start_time = data.NewData.CurrentLapTime
-                                start_time = TimeSpan.FromSeconds(Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionTime")))
-                            };
-
-                            this.TriggerEvent("CornerStart");
-                        }
-                        LastCorner = CurrentCorner;
-                        CurrentCorner = newCorner;
-                    }
-                    // update corner min
-                    if (CurrentCorner != -1 && data.NewData.SpeedLocal < CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].min_speed)
-                    {
-                        CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].min_speed = data.NewData.SpeedLocal;
-                        //CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].min_time = data.NewData.CurrentLapTime;
-                        CornerSpeeds[CurrentLap % NumberOfLaps][CurrentCorner].min_time = TimeSpan.FromSeconds(Convert.ToDouble(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionTime")));
-                    }
-                    */
-
+                    //if (update) {
+                    //    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("LiveDelta"));
+                    //    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("LiveDelta5"));
+                    //}
                 }
             }
         }
@@ -941,6 +1001,7 @@ namespace User.CornerSpeed
             double distance_m = 0.0;
             int current_turn_i = -1;
             var corners = new ObservableCollection<Corner>(TurnNumbers.turns.Select((o, i) => new Corner(o, i)));
+            var start = DateTime.UtcNow;
             foreach (Sector sector in ComparisonLapSectors)
             {
                 var total_time_s = total_sector_time_s;
@@ -962,21 +1023,21 @@ namespace User.CornerSpeed
                         {
                             // end turn
                             corners[current_turn_i].end_speed = current_speed;
-                            corners[current_turn_i].end_time = TimeSpan.FromSeconds(total_time_s);
+                            corners[current_turn_i].end_time = start.AddSeconds(total_time_s);
                             corners[current_turn_i].init = true;
                         }
                         if (turn_i != -1)
                         {
                             // start turn
                             corners[turn_i].start_speed = current_speed;
-                            corners[turn_i].start_time = TimeSpan.FromSeconds(total_time_s);
+                            corners[turn_i].start_time = start.AddSeconds(total_time_s);
                         }
                         current_turn_i = turn_i;
                     }
                     if (current_turn_i != -1 && current_speed < corners[current_turn_i].min_speed) 
                     {
                         corners[current_turn_i].min_speed = current_speed;
-                        corners[current_turn_i].min_time = TimeSpan.FromSeconds(total_time_s);
+                        corners[current_turn_i].min_time = start.AddSeconds(total_time_s);
                     }
                     distance_m += sector.distance_per_marker;
                     total_time_s = total_sector_time_s + marker.sector_time;
@@ -988,6 +1049,8 @@ namespace User.CornerSpeed
 
         public double LapDist;
         private Marker _currentMarker;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public Marker GetCurrentMarker() {
             if (ComparisonLapSectors.Count == 0)
@@ -1012,6 +1075,62 @@ namespace User.CornerSpeed
             return _currentMarker;
         }
 
+        public ControlMapperPlugin ControlMapper;
+
+        public InputMode InputMode = InputMode.Car;
+
+        public Dictionary<InputMode, List<string>> ButtonMappings = new Dictionary<InputMode, List<string>>
+        {
+            { 
+                InputMode.Car, new List<string>
+                {
+                    "CheckDamage",
+                    "ClearVisor",
+                    "ClearPenalties"
+                }
+            },
+            //{ 
+            //    InputMode.Car2, new List<string>
+            //    {
+            //        "CheckDamage",
+            //        "Ignition",
+            //        "Starter"
+            //    }
+            //},
+            { 
+                InputMode.Pitting, new List<string>
+                {
+                    "iRacingClearTires",
+                    "iRacingAllTires",
+                    "Pitting"
+                }
+            },
+            { 
+                InputMode.Chat, new List<string>
+                {
+                    "Sorry",
+                    "Thanks",
+                    "PushToTalk"
+                }
+            },
+            //{ 
+            //    InputMode.BlackBox, new List<string>
+            //    {
+            //        "PrevBlackBox",
+            //        "ToggleSelectedControl",
+            //        "NextBlackBox"
+            //    }
+            //}
+        };
+
+        public List<string> Actions =
+        [
+            "iRacingClearTires",
+            "iRacingAllTires"
+        ];
+
+        public List<bool> ButtonPressed = [false, false, false];
+        
         /// <summary>
         /// Called once after plugins startup
         /// Plugins are rebuilt at game change
@@ -1020,29 +1139,134 @@ namespace User.CornerSpeed
         public void Init(PluginManager pluginManager)
         {
             SimHub.Logging.Current.Info("Starting plugin");
+            program = new();
 
             //JackDashResource = Application.LoadComponent(new Uri("/User.CornerSpeed;component/ControlsTemplates.xaml", UriKind.RelativeOrAbsolute)) as ResourceDictionary;
             
             //MessageBox.Show("Init", "Question", MessageBoxButton.YesNo);
 
+            ControlMapper = pluginManager.GetPlugin<ControlMapperPlugin>();
+
             // Load settings
-            Settings = this.ReadCommonSettings<CornerSpeedPluginSettings>("GeneralSettings", () => new CornerSpeedPluginSettings());
+            Settings = this.ReadCommonSettings("GeneralSettings", () => new CornerSpeedPluginSettings());
+            Settings.PropertyChanged += Settings_PropertyChanged;
                         
-            ComparisonLapSectors = new List<Sector>();
+                       
+            //Settings.CustomButton1Action.SetActionStartDelegate((pm, inputName) => {
+            //    ControlMapper.StartRole("ShiftDown", "CornerSpeedPlugin");
+            //});
+            //Settings.CustomButton1Action.SetActionEndDelegate((pm, inputName) => {
+            //    ControlMapper.StopRole("ShiftDown", "CornerSpeedPlugin");
+            //});
+            
+            this.AddAction("iRacingClearTires", (a, b) => iRacing.PitCommand.ClearTireChange());
+            this.AddAction("iRacingAllTires", (a, b) => iRacing.PitCommand.ChangeAllTyres());
+            this.AddAction("iRacingRequestFastRepair", (a, b) => iRacing.PitCommand.RequestFastRepair());
+            this.AddAction("iRacingChangeLeftFrontTire", (a, b) => iRacing.PitCommand.ChangeLeftFrontTire());
+            this.AddAction("iRacingChangeRightFrontTire", (a, b) => iRacing.PitCommand.ChangeRightFrontTire());
+            this.AddAction("iRacingChangeLeftRearTire", (a, b) => iRacing.PitCommand.ChangeLeftRearTire());
+            this.AddAction("iRacingChangeRightRearTire", (a, b) => iRacing.PitCommand.ChangeRightRearTire());
+
+
+            // Declare an input which can be mapped, inputs are meant to be keeping state of the source inputs,
+            // they won't trigger on inputs not capable of "holding" their state.
+            // Internally they work similarly to AddAction, but are restricted to a "during" behavior
+            this.AddInputMapping(
+                inputName: "CycleInputMode",
+                inputPressed: (a, b) => { 
+                    for (int i = 0; i < 3; i++)
+                    {
+                        ControlMapper.StopRole(ButtonMappings[InputMode][i], "CornerSpeedPlugin");
+                    }
+                    InputMode = (InputMode)(((int)InputMode + 1) % (int)InputMode.Count);
+                },
+                inputReleased: (a, b) => {
+                }
+            );
+            
+            this.AddInputMapping(
+                inputName: "CustomButton1",
+                inputPressed: (a, b) => {
+                    ButtonPressed[0] = true;
+                    if (Actions.Contains(ButtonMappings[InputMode][0])) {
+                        a.TriggerAction("CornerSpeedPlugin." + ButtonMappings[InputMode][0]);
+                    } else { 
+                        ControlMapper.StartRole(ButtonMappings[InputMode][0], "CornerSpeedPlugin"); 
+                    }
+                },
+                inputReleased: (a, b) => {
+                    ButtonPressed[0] = false;
+                    if (Actions.Contains(ButtonMappings[InputMode][0])) {
+
+                    } else {
+                        ControlMapper.StopRole(ButtonMappings[InputMode][0], "CornerSpeedPlugin");
+                    }
+                }
+            );
+            this.AddInputMapping(
+                inputName: "CustomButton2",
+                inputPressed: (a, b) => { 
+                    ButtonPressed[1] = true;
+                    if (Actions.Contains(ButtonMappings[InputMode][1])) {
+                        a.TriggerAction("CornerSpeedPlugin." + ButtonMappings[InputMode][1]);
+                    } else { 
+                        ControlMapper.StartRole(ButtonMappings[InputMode][1], "CornerSpeedPlugin"); 
+                    }
+                },
+                inputReleased: (a, b) => {
+                    ButtonPressed[1] = false;
+                    if (Actions.Contains(ButtonMappings[InputMode][1])) {
+
+                    } else {
+                        ControlMapper.StopRole(ButtonMappings[InputMode][1], "CornerSpeedPlugin");
+                    }
+                }
+            );
+            this.AddInputMapping(
+                inputName: "CustomButton3",
+                inputPressed: (a, b) => { 
+                    ButtonPressed[2] = true;
+                    if (Actions.Contains(ButtonMappings[InputMode][2])) {
+                        a.TriggerAction("CornerSpeedPlugin." + ButtonMappings[InputMode][2]);
+                    } else { 
+                        ControlMapper.StartRole(ButtonMappings[InputMode][2], "CornerSpeedPlugin"); 
+                    }
+                },
+                inputReleased: (a, b) => {
+                    ButtonPressed[2] = false;
+                    if (Actions.Contains(ButtonMappings[InputMode][2])) {
+
+                    } else {
+                        ControlMapper.StopRole(ButtonMappings[InputMode][2], "CornerSpeedPlugin");
+                    }
+                }
+            );
+
+
             //Settings.UpdateLapFiles();
-                        
+
             LoadLapFile();
 
-            CornerSpeeds = new List<List<Corner>>();
             BestSessionCornerSpeeds = new ObservableCollection<Corner>();
             SectorTimes = new List<List<TimeSpan>>();
             SectorTimesBest = new List<TimeSpan>();
             LapTimes = new List<TimeSpan>();
             LapNumbers = new List<int>();
             //CornerSpeeds = new List<List<double>>(NumberOfLaps);
-
-            NumberOfCorners = CornerPositions.Length;
             
+            this.AttachDelegate(name: "InputMode", valueProvider: () => (int)InputMode);
+            this.AttachDelegate(name: "InputModeName", valueProvider: () => InputMode.ToDescriptionString());
+            this.AttachDelegate(name: "CustomButton1", valueProvider: () => ButtonMappings[InputMode][0]);
+            this.AttachDelegate(name: "CustomButton2", valueProvider: () => ButtonMappings[InputMode][1]);
+            this.AttachDelegate(name: "CustomButton3", valueProvider: () => ButtonMappings[InputMode][2]);
+            this.AttachDelegate(name: "CustomButton1_Pressed", valueProvider: () => ButtonPressed[0]);
+            this.AttachDelegate(name: "CustomButton2_Pressed", valueProvider: () => ButtonPressed[1]);
+            this.AttachDelegate(name: "CustomButton3_Pressed", valueProvider: () => ButtonPressed[2]);
+            this.AttachDelegate(name: "LiveDelta", valueProvider: () => LiveDelta);
+            this.AttachDelegate(name: "DLiveDelta", valueProvider: () => DLiveDelta);
+            this.AttachDelegate(name: "LiveDelta5", valueProvider: () => LiveDelta5);
+            this.AttachDelegate(name: "DLiveDelta5", valueProvider: () => DLiveDelta5);
+            this.AttachDelegate(name: "D5LiveDelta5", valueProvider: () => D5LiveDelta5);
             this.AttachDelegate(name: "NumberOfCorners", valueProvider: () => NumberOfCorners);
             //this.AttachDelegate(name: "CurrentCorner", valueProvider: () => CurrentCorner);
             //this.AttachDelegate(name: "LastCorner", valueProvider: () => LastCorner);
@@ -1113,49 +1337,13 @@ namespace User.CornerSpeed
             for (int lap = 0; lap < NumberOfLaps; lap++) {
                 //CornerSpeeds.Insert(lap, new List<double>(NumberOfCorners));
                 SectorTimes.Add(new List<TimeSpan>());
-                CornerSpeeds.Add(new List<Corner>());
                 LapTimes.Add(TimeSpan.Zero);
                 LapNumbers.Add(-1);
                 var ilap_s = lap.ToString().PadLeft(2, '0');
                 int ilap_i = lap;
                 this.AttachDelegate(name: $"LapTimes_{ilap_s}", valueProvider: () => LapTimes[(CurrentLap + NumberOfLaps - ilap_i) % NumberOfLaps]);
                 this.AttachDelegate(name: $"LapNumbers_{ilap_s}", valueProvider: () => LapNumbers[(CurrentLap + NumberOfLaps - ilap_i) % NumberOfLaps]);
-
-                // turnNumbers.turns.Count
-                for (int corner = 0; corner < 20; corner++) {
-                    CornerSpeeds[lap].Add(new Corner());
-                    var lap_s = lap.ToString().PadLeft(2, '0');
-                    var corner_s = corner.ToString().PadLeft(2, '0');
-                    int lap_i = lap;
-                    int corner_i = corner;
-                    this.AttachDelegate(name: $"CornerSpeed_{lap_s}_{corner_s}", valueProvider: () => CornerSpeeds[(CurrentLap + NumberOfLaps - lap_i) % NumberOfLaps][corner_i].min_speed);
-                    this.AttachDelegate(name: $"CornerSpeedStart_{lap_s}_{corner_s}", valueProvider: () => CornerSpeeds[(CurrentLap + NumberOfLaps - lap_i) % NumberOfLaps][corner_i].start_speed);
-                    this.AttachDelegate(name: $"CornerSpeedEnd_{lap_s}_{corner_s}", valueProvider: () => CornerSpeeds[(CurrentLap + NumberOfLaps - lap_i) % NumberOfLaps][corner_i].end_speed);
-                    this.AttachDelegate(name: $"CornerSpeedRating_{lap_s}_{corner_s}", valueProvider: () => {
-                        var min = 999.9;
-                        var max = 0.0;
-                        for (int lap_j = 0; lap_j < NumberOfLaps; lap_j++)
-                        {
-                            if (CornerSpeeds[lap_j][corner_i].min_speed == 0.0 || CornerSpeeds[lap_j][corner_i].min_speed == 999.9)
-                                continue;
-                            if (CornerSpeeds[lap_j][corner_i].min_speed < min)
-                            {
-                                min = CornerSpeeds[lap_j][corner_i].min_speed;
-                            }
-                            if (CornerSpeeds[lap_j][corner_i].min_speed > max)
-                            {
-                                max = CornerSpeeds[lap_j][corner_i].min_speed;
-                            }
-                        }
-                        if (min != 999.9 && max != 0.0) { 
-                            return (CornerSpeeds[(CurrentLap + NumberOfLaps - lap_i) % NumberOfLaps][corner_i].min_speed - min) / (max - min);
-                        } else
-                        {
-                            return 0.0;
-                        }
-                    });
-                }
-                
+                                
                 for (int sector = 0; sector < NumberOfSectors; sector++) {
                     SectorTimes[lap].Add(TimeSpan.Zero);
                     var lap_s = lap.ToString().PadLeft(2, '0');
@@ -1235,6 +1423,7 @@ namespace User.CornerSpeed
                     GamePaused = !GamePaused;
                 });
 
+
             // Declare an input which can be mapped, inputs are meant to be keeping state of the source inputs,
             // they won't trigger on inputs not capable of "holding" their state.
             // Internally they work similarly to AddAction, but are restricted to a "during" behavior
@@ -1244,6 +1433,23 @@ namespace User.CornerSpeed
             //    inputReleased: (a, b) => {/* One of the mapped input has been released */}
             //);
 
+        }
+
+        private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Mode")
+            {
+                //var new_attempts = new List<CornerViewModel>();
+                for (int i = 0; i < CornerAttempts.Count; i++)
+                {
+                    //var turn_index = CornerAttempts[i].TurnIndex;
+                    //CornerAttempts[i] = new CornerViewModel(CornerAttempts[i], oldCorners[turn_index], CornersToCompare[turn_index]);
+                    CornerAttempts[i].Mode = Settings.Mode;
+                    //CornerAttempts[i].UpdateComparison(CornersToCompare[turn_index]);
+                    //new_attempts.Add(new CornerViewModel(CurrentCornerSpeeds[turn_index], CornersToCompare[turn_index]));
+                }
+                //CornerAttempt
+            }
         }
     }
 }

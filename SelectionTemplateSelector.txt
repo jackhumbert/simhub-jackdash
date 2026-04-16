@@ -1,0 +1,29 @@
+
+
+// SimHub.Plugins, Version=1.0.9524.22766, Culture=neutral, PublicKeyToken=null
+// SimHub.Plugins.OutputPlugins.GraphicalDash.SelectionTemplateSelector
+using System.Windows;
+using System.Windows.Controls;
+using SimHub.Plugins.OutputPlugins.GraphicalDash.Models;
+
+public class SelectionTemplateSelector : DataTemplateSelector
+{
+	public override DataTemplate SelectTemplate(object item, DependencyObject container)
+	{
+		FrameworkElement frameworkElement = container as FrameworkElement;
+		if (item is Layer)
+		{
+			return frameworkElement.FindResource("layer") as DataTemplate;
+		}
+		if (item is ContainerItemBase)
+		{
+			return frameworkElement.FindResource("container") as DataTemplate;
+		}
+		GDashItemBindingBase obj = item as GDashItemBindingBase;
+		if (obj != null && obj.Owner?.Editor?.IsEditMode == true)
+		{
+			return frameworkElement.FindResource("selectable") as DataTemplate;
+		}
+		return frameworkElement.FindResource("notselectable") as DataTemplate;
+	}
+}

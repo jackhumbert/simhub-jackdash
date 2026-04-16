@@ -12,7 +12,7 @@ namespace User.CornerSpeed
 {
     //[DesignerIcon("/SimHub.Plugins;component/Resources/comp_widget.png")]
     [AddINotifyPropertyChangedInterface]
-    public class iRacingGroupItem : GroupItem // : ChartItem //, IDashControl
+    public class iRacingGroupItem : GroupItem, INeedLoadedDynamically // : ChartItem //, IDashControl
     {
         public override string ComponentTypeName => "iRacingGroup";
 
@@ -30,7 +30,7 @@ namespace User.CornerSpeed
 
     //[DesignerIcon("/SimHub.Plugins;component/Resources/comp_widget.png")]
     [AddINotifyPropertyChangedInterface]
-    public class iRacingSubGroupItem : GroupItem // : ChartItem //, IDashControl
+    public class iRacingSubGroupItem : GroupItem, INeedLoadedDynamically // : ChartItem //, IDashControl
     {
         public override string ComponentTypeName => "iRacingSubGroup";
 

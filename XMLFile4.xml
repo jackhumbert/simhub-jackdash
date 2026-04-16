@@ -1,0 +1,29 @@
+﻿<UserControl x:Class="SimHub.Plugins.OutputPlugins.GraphicalDash.DashHostControlsRendering" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:SimHub.Plugins.OutputPlugins.GraphicalDash" x:Name="me" FocusManager.IsFocusScope="True" IsTabStop="True" Focusable="True" Background="#00FFFFFF" Margin="0" Padding="0">
+	<FrameworkElement.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="/SimHub.Plugins;component/OutputPlugins/GraphicalDash/Render/ControlsTemplates.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</FrameworkElement.Resources>
+	<Canvas Name="screenCanvas" DataContext="{Binding ElementName=me, Path=ShownScreen}" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Owner.BaseWidth}">
+		<local:GroupPresenter x:Name="GContainerBackground" ItemSource="{Binding Path=BackgroundLayerItems}" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Path=Owner.BaseWidth}" />
+		<local:GroupPresenter x:Name="GContainerScreen" ItemSource="{Binding Path=Items}" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Owner.BaseWidth}" />
+		<local:GroupPresenter x:Name="GContainerForeground" ItemSource="{Binding Path=ForegroundLayerItems}" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Owner.BaseWidth}" />
+		<ItemsControl ItemsSource="{Binding Path=Owner.VisibleOverlays}">
+			<ItemsControl.ItemsPanel>
+				<ItemsPanelTemplate>
+					<Canvas />
+				</ItemsPanelTemplate>
+			</ItemsControl.ItemsPanel>
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<local:GroupPresenter x:Name="GContainerOverlay" ItemSource="{Binding Path=Items}" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Owner.BaseWidth}" />
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+		<Panel.Background>
+			<ImageBrush ImageSource="{Binding ElementName=me, Path=ShownScreen.EffectiveBackgroundScreen.ImageData}" />
+		</Panel.Background>
+	</Canvas>
+</UserControl>

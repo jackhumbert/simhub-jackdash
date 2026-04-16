@@ -29,7 +29,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -52,6 +52,9 @@
     <Reference Include="InputManagerCS, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(SIMHUB_INSTALL_PATH)InputManagerCS.dll</HintPath>
+    </Reference>
+    <Reference Include="iRacingSDK">
+      <HintPath>..\..\iRacingSDK.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -130,7 +133,8 @@
   <ItemGroup>
     <Compile Include="Converters.cs" />
     <Compile Include="CornerSpeedStorage.cs" />
-    <Compile Include="iRacingCorner.cs" />
+    <Compile Include="iRacingChatCommand.cs" />
+    <Compile Include="iRacingCornerSpeeds.cs" />
     <Compile Include="iRacingCornerSpeedDelta.xaml.cs">
       <DependentUpon>iRacingCornerSpeedDelta.xaml</DependentUpon>
     </Compile>
@@ -145,7 +149,7 @@
     <Compile Include="iRacingLayer.cs" />
     <Compile Include="iRacingLayerPresenter.cs" />
     <Compile Include="JackChart.cs" />
-    <Compile Include="JackWidgetItem.cs" />
+    <Compile Include="JackChartItem.cs" />
     <Compile Include="CornerSpeedPlugin.cs" />
     <Compile Include="CornerSpeedPluginSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

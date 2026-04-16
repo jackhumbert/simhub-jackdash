@@ -11,12 +11,15 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/User.CornerSpeed;component/App.xaml" />
     </ResourceDictionary.MergedDictionaries>
-    <DataTemplate x:Key="{DataTemplateKey {x:Type user:JackWidgetItem}}" DataType="{x:Type user:JackWidgetItem}">
+    <DataTemplate x:Key="{DataTemplateKey {x:Type user:JackChartItem}}" DataType="{x:Type user:JackChartItem}">
         <editorcontrols:ControlHost>
             <user:JackChart
+                Padding="{Binding Path=Padding}"
                 AutoMaximum="{Binding Path=UseMaximum, Converter={NotBoolConverter}}"
                 AutoMinimum="{Binding Path=UseMinimum, Converter={NotBoolConverter}}"
                 DataPoints="{Binding Points}"
+                FillColor="{Binding Path=FillColor}"
+                LabelChanges="{Binding Path=LabelChanges}"
                 LineColor="{Binding Path=LineColor}"
                 LineThickness="{Binding Path=LineTickness}"
                 Maximum="{Binding Path=Maximum}"
@@ -40,15 +43,15 @@
             </editorcontrols:ControlHost.LayoutTransform-->
             <ContentControl
                 x:Name="iRacingBorder"
-                Background="{StaticResource Brush.Background.Elevation0}"
-                Style="{StaticResource Style.ContentControl.ElCustom}">
+                Background="{StaticResource BlackboxBackgroundBrush0}"
+                Style="{StaticResource BlackboxControlStyle}">
                 <Canvas>
                     <TextBlock
                         Margin="4,0,0,0"
                         FontFamily="Exo 2"
                         FontSize="16"
                         FontWeight="Bold"
-                        Foreground="{StaticResource Brush.Text.Yellow}"
+                        Foreground="{StaticResource TextHighlightBrush}"
                         LineHeight="14.4"
                         Text="{Binding Header}" />
                     <user:iRacingGroupPresenter
@@ -63,7 +66,7 @@
     </DataTemplate>
     <DataTemplate x:Key="{DataTemplateKey {x:Type user:iRacingSubGroupItem}}" DataType="{x:Type user:iRacingSubGroupItem}">
         <editorcontrols:ControlHost>
-            <Border x:Name="iRacingBorder" Background="{StaticResource Brush.Background.Elevation1}">
+            <Border x:Name="iRacingBorder" Background="{StaticResource BlackboxBackgroundBrush1}">
                 <user:iRacingSubGroupPresenter
                     Width="{Binding Width}"
                     Height="{Binding Height}"
@@ -82,123 +85,4 @@
             <user:iRacingCornerSpeedDelta />
         </editorcontrols:ControlHost>
     </DataTemplate>
-    <!--  selectiontemplates
-    <DataTemplate x:Key="iracinglayer" DataType="{x:Type user:iRacingLayer}">
-        <Grid IsHitTestVisible="{Binding Path=IsFreezed, Converter={NotBoolConverter Invert=True}}">
-            <Grid
-                Width="{Binding Width}"
-                Height="{Binding Height}"
-                Margin="{Binding Path=Position}"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Background="#00FFFFFF"
-                Visibility="{Binding Path=Group, Converter={SHBoolToVisibilityConverter}}" />
-            <Grid
-                Width="{Binding Width}"
-                Height="{Binding Height}"
-                Margin="{Binding Path=Position}"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Visibility="{Binding Path=TemporaryUnGroup, Converter={SHBoolToVisibilityConverter}}">
-                <Rectangle
-                    Margin="-8"
-                    Stroke="#FFFFA500"
-                    StrokeDashArray="4 4"
-                    StrokeThickness="2">
-                    <UIElement.Effect>
-                        <DropShadowEffect
-                            BlurRadius="4"
-                            Direction="0"
-                            Opacity="1"
-                            ShadowDepth="0"
-                            Color="Black" />
-                    </UIElement.Effect>
-                </Rectangle>
-            </Grid>
-            <Grid Visibility="{Binding Path=ShowSelection, Converter={SHBoolToVisibilityConverter Invert=True}}">
-                <ItemsControl
-                    Name="icLayer"
-                    ItemTemplateSelector="{StaticResource templateSelector}"
-                    ItemsSource="{Binding Path=Childrens}"
-                    Template="{StaticResource MyItemsTemplate}"
-                    Visibility="{Binding Visible, Converter={SHBoolToVisibilityConverter}}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <Grid
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                Visibility="{Binding Owner.Editor.IsEditMode, Converter={SHBoolToVisibilityConverter}}" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-            </Grid>
-            <Grid
-                Name="ReflectedVisual"
-                Width="{Binding Width}"
-                Height="{Binding Height}"
-                Margin="{Binding Path=Position}"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Background="#00FFFFFF"
-                IsHitTestVisible="{Binding Path=IsFreezed, Converter={NotBoolConverter Invert=True}}"
-                RenderTransformOrigin="0.5,0.5"
-                Visibility="{Binding Path=ShowSelection, Converter={SHBoolToVisibilityConverter}}">
-                <editorcontrols:EditorSelectionAdorner />
-            </Grid>
-        </Grid>
-    </DataTemplate>-->
-    <!--DataTemplate x:Key="container" DataType="{x:Type user:iRacingGroupItem}">
-        <Grid Margin="{Binding Path=Position}" IsHitTestVisible="{Binding Path=IsFreezed, Converter={NotBoolConverter Invert=True}}">
-            <Grid
-                Width="{Binding Width}"
-                Height="{Binding Height}"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Visibility="{Binding Path=TemporaryUnGroup, Converter={SHBoolToVisibilityConverter}}">
-                <Rectangle
-                    Margin="-8"
-                    Stroke="#FFFFA500"
-                    StrokeDashArray="4 4"
-                    StrokeThickness="2">
-                    <UIElement.Effect>
-                        <DropShadowEffect
-                            BlurRadius="4"
-                            Direction="0"
-                            Opacity="1"
-                            ShadowDepth="0"
-                            Color="Black" />
-                    </UIElement.Effect>
-                </Rectangle>
-            </Grid>
-            <Grid Visibility="{Binding Path=ShowSelection, Converter={SHBoolToVisibilityConverter Invert=True}}">
-                <ItemsControl
-                    Name="icLayer"
-                    ItemTemplateSelector="{StaticResource templateSelector}"
-                    ItemsSource="{Binding Path=Childrens}"
-                    Template="{StaticResource MyItemsTemplate}"
-                    Visibility="{Binding Visible, Converter={SHBoolToVisibilityConverter}}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <Grid
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                Visibility="{Binding Owner.Editor.IsEditMode, Converter={SHBoolToVisibilityConverter}}" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-            </Grid>
-            <Grid
-                Name="ReflectedVisual"
-                Width="{Binding Width}"
-                Height="{Binding Height}"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Background="#00FFFFFF"
-                IsHitTestVisible="{Binding Path=IsFreezed, Converter={NotBoolConverter Invert=True}}"
-                RenderTransformOrigin="0.5,0.5"
-                Visibility="{Binding Path=ShowSelection, Converter={SHBoolToVisibilityConverter}}">
-                <editorcontrols:EditorSelectionAdorner />
-            </Grid>
-        </Grid>
-    </DataTemplate-->
 </ResourceDictionary>

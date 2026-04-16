@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using GongSolutions.Wpf.DragDrop.Utilities;
+using Newtonsoft.Json;
 using PropertyChanged;
 using SimHub.Plugins;
 using SimHub.Plugins.OutputPlugins.GraphicalDash.Models;
@@ -49,9 +50,10 @@ namespace User.CornerSpeed
     //    }
     //}
 
-    [AddINotifyPropertyChangedInterface]
-    public class iRacingCornerSpeedDeltaItem : DrawableItem
+    //[AddINotifyPropertyChangedInterface]
+    public class iRacingCornerSpeedDeltaItem : DrawableItem, INeedLoadedDynamically
     {
+        //public event PropertyChangedEventHandler PropertyChanged;
         public override string ComponentTypeName => "iRacingCornerSpeedDeltaItem";
         
         [Browsable(false)]
@@ -61,17 +63,26 @@ namespace User.CornerSpeed
         public iRacingCornerSpeedDeltaItem() : base()
         {
             Plugin = PluginManager.GetInstance().GetPlugin<CornerSpeedPlugin>();
+            //Plugin.PropertyChanged += Plugin_PropertyChanged;
         }
+
+        //private void Plugin_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        //{
+        //    if (e.PropertyName == "LiveDelta")
+        //    {
+        //        Delta = Plugin.LiveDelta;
+        //    }
+        //}
 
         [Browsable(false)]
         [JsonIgnore]
         public override bool FreezeWhenRunning => false;
 
-        public double Delta { get; set; }
+        public double Delta { get; set; } = 0.0;
         
-        public double Range { get; set; }
+        public double Range { get; set; } = 2.0;
 
-        public double DDelta { get; set; }
+        public double DDelta { get; set; } = 0.0;
 
     }
 
@@ -80,12 +91,18 @@ namespace User.CornerSpeed
     /// </summary>
     public partial class iRacingCornerSpeedDelta : UserControl
     {
-        public CornerSpeedPlugin Plugin { get; set; }
+        //public CornerSpeedPlugin Plugin { get; set; }
 
         public iRacingCornerSpeedDelta()
         {
             InitializeComponent();
-            Plugin = PluginManager.GetInstance().GetPlugin<CornerSpeedPlugin>();
+            //Plugin = PluginManager.GetInstance().GetPlugin<CornerSpeedPlugin>();
+        }
+
+        private void UserControl_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+                this.GetVisualAncestor<Window>().DragMove();
         }
     }
 }

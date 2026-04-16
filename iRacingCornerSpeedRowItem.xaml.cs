@@ -30,49 +30,13 @@ namespace User.CornerSpeed
         {
             InitializeComponent();
             Plugin = PluginManager.GetInstance().GetPlugin<CornerSpeedPlugin>();
-            //ViewModel = DataContext;
         }
 
         public CornerViewModel ViewModel => DataContext as CornerViewModel;
 
-        //public CornerViewModel ViewModel
-        //{
-        //    get { return (CornerViewModel)GetValue(ViewModelProperty); }
-        //    set { SetValue(ViewModelProperty, value); }
-        //}
-
-        //public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register("ViewModel", typeof(CornerViewModel), typeof(iRacingCornerSpeedRowItem), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, new PropertyChangedCallback(OnViewModelChanged)));
-
-        //private static void OnViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        //{
-        //    ////throw new NotImplementedException();
-        //    //if (e.OldValue is CornerViewModel cvm2)
-        //    //{
-        //    //    ;
-        //    //}
-        //    //var cvm = (CornerViewModel)e.NewValue;
-        //    //cvm.PropertyChanged += (sender, args) =>
-        //    //{
-        //    //    var self = (iRacingCornerSpeedRowItem)d;
-        //    //    self.Dispatcher.Invoke(() =>
-        //    //    {
-        //    //        var formatter = new TimeSpanFormatter();
-        //    //        self.Duration.Text = (string)formatter.Convert(cvm.Duration, typeof(string), null, null);
-        //    //    });
-        //    //};
-        //}
-
-        //private static void Cvm_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        //{
-        //    if (sender is CornerViewModel corner)
-        //    {
-        //        corner.
-        //    }
-        //}
-
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            switch (Plugin.Mode)
+            switch (Plugin.Settings.Mode)
             {
                 case ComparisonMode.CompareToBestCarLap:
                     Plugin.BestCarCornerSpeeds[Plugin.TrackId][ViewModel.TurnIndex] = ViewModel.ComparisonCorner;

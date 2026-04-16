@@ -1,0 +1,272 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:anim="https://github.com/whistyun/AnimatedImage.Wpf"
+    xmlns:editorcontrols="clr-namespace:SimHub.Plugins.OutputPlugins.EditorControls;assembly=SimHub.Plugins"
+    xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+    xmlns:local="clr-namespace:SimHub.Plugins.OutputPlugins.GraphicalDash;assembly=SimHub.Plugins"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:user="clr-namespace:User.CornerSpeed">
+
+    <user:SpeedConverter x:Key="SpeedConverter" />
+    <user:TimeSpanFormatter x:Key="TimeSpanFormatter" />
+    <user:TimeSpanDeltaFormatter x:Key="TimeSpanDeltaFormatter" />
+    <user:DeltaColorConverter x:Key="DeltaColorConverter" />
+    <user:DeltaBarColorConverter x:Key="DeltaBarColorConverter" />
+    <user:DurationDeltaColorConverter x:Key="DurationDeltaColorConverter" />
+    <user:SpeedDeltaConverter x:Key="SpeedDeltaConverter" />
+    <user:ComparisonModeConverter x:Key="ComparisonModeConverter" />
+    <user:ValueToInverseConverter x:Key="ValueToInverseConverter" />
+    <user:LapTimeDeltaConverter x:Key="LapTimeDeltaConverter" />
+    <user:MeterDeltaConverter x:Key="MeterDeltaConverter" />
+    <!--  themes/generic  -->
+    <Style x:Key="ItemsControlStyle" TargetType="{x:Type ItemsControl}">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ItemsControl}">
+                    <ItemsPresenter SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="{x:Type user:iRacingLayerPresenter}">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type user:iRacingLayerPresenter}">
+                    <Canvas Width="{Binding Path=Owner.BaseWidth}" Height="{Binding Path=Owner.BaseHeight}">
+                        <ItemsControl ItemsSource="{Binding ItemSource, RelativeSource={RelativeSource TemplatedParent}}" Style="{StaticResource ItemsControlStyle}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas
+                                        Width="{Binding Path=Owner.BaseWidth}"
+                                        Height="{Binding Path=Owner.BaseHeight}"
+                                        IsItemsHost="true" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="{x:Type ContentPresenter}">
+                                    <Setter Property="Canvas.Left" Value="{Binding CanvasLeft}" />
+                                    <Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
+                                    <Setter Property="UIElement.Visibility" Value="{Binding VisibleEx, Converter={SHBoolToVisibilityConverter}}" />
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                        </ItemsControl>
+                        <ItemsControl
+                            Name="repeatItemsControl"
+                            ItemsSource="{Binding RepeatItemSource, RelativeSource={RelativeSource TemplatedParent}}"
+                            Style="{StaticResource ItemsControlStyle}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas
+                                        Width="{Binding Path=Owner.BaseWidth}"
+                                        Height="{Binding Path=Owner.BaseHeight}"
+                                        IsItemsHost="true" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ItemsControl Margin="{Binding Path=Margin}" ItemsSource="{Binding Path=Childrens}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <Canvas IsItemsHost="true" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <ContentControl Content="{Binding}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                        <ItemsControl.ItemContainerStyle>
+                                            <Style TargetType="{x:Type ContentPresenter}">
+                                                <Setter Property="Canvas.Left" Value="{Binding CanvasLeft}" />
+                                                <Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
+                                                <Setter Property="UIElement.Visibility" Value="{Binding VisibleEx, Converter={SHBoolToVisibilityConverter}}" />
+                                            </Style>
+                                        </ItemsControl.ItemContainerStyle>
+                                    </ItemsControl>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Canvas>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="{x:Type user:iRacingGroupPresenter}">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type user:iRacingGroupPresenter}">
+                    <Canvas Width="{Binding Path=Owner.BaseWidth}" Height="{Binding Path=Owner.BaseHeight}">
+                        <ItemsControl ItemsSource="{Binding ItemSource, RelativeSource={RelativeSource TemplatedParent}}" Style="{StaticResource ItemsControlStyle}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas
+                                        Width="{Binding Path=Owner.BaseWidth}"
+                                        Height="{Binding Path=Owner.BaseHeight}"
+                                        IsItemsHost="true" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="{x:Type ContentPresenter}">
+                                    <Setter Property="Canvas.Left" Value="{Binding CanvasLeft}" />
+                                    <Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
+                                    <Setter Property="UIElement.Visibility" Value="{Binding VisibleEx, Converter={SHBoolToVisibilityConverter}}" />
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                        </ItemsControl>
+                    </Canvas>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="{x:Type user:iRacingSubGroupPresenter}">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type user:iRacingSubGroupPresenter}">
+                    <Canvas Width="{Binding Path=Owner.BaseWidth}" Height="{Binding Path=Owner.BaseHeight}">
+                        <ItemsControl ItemsSource="{Binding ItemSource, RelativeSource={RelativeSource TemplatedParent}}" Style="{StaticResource ItemsControlStyle}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas
+                                        Width="{Binding Path=Owner.BaseWidth}"
+                                        Height="{Binding Path=Owner.BaseHeight}"
+                                        IsItemsHost="true" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="{x:Type ContentPresenter}">
+                                    <Setter Property="Canvas.Left" Value="{Binding CanvasLeft}" />
+                                    <Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
+                                    <Setter Property="UIElement.Visibility" Value="{Binding VisibleEx, Converter={SHBoolToVisibilityConverter}}" />
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                        </ItemsControl>
+                    </Canvas>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#14FFFFFF" />
+    <SolidColorBrush x:Key="BlackboxBorderBrush" Color="#14FFFFFF" />
+
+    <SolidColorBrush x:Key="TextBrush" Color="#F2F2F3" />
+    <SolidColorBrush x:Key="TextFadedBrush" Color="#A3FFFFFF" />
+    <SolidColorBrush x:Key="TextHighlightBrush" Color="#FFCC00" />
+
+    <LinearGradientBrush x:Key="BlackboxBackgroundBrush0" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0.0" Color="#FF44444B" />
+        <GradientStop Offset="1.0" Color="#FF1E1E27" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="BlackboxBackgroundBrush0.Inverted" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="1.0" Color="#FF44444B" />
+        <GradientStop Offset="0.0" Color="#FF1E1E27" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="BlackboxBackgroundBrush1" Color="#7A05050F" />
+    <SolidColorBrush x:Key="BlackboxBackgroundBrush2" Color="#06FFFFFF" />
+    <SolidColorBrush x:Key="BlackboxBackgroundBrush3" Color="#061E1E27" />
+    <LinearGradientBrush x:Key="BlackboxBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0.0" Color="#2B2B33" />
+        <GradientStop Offset="1.0" Color="#12121B" />
+    </LinearGradientBrush>
+
+    <Style x:Key="BlackboxControlStyle" TargetType="{x:Type ContentControl}">
+        <Setter Property="Border.CornerRadius" Value="8" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+        <Setter Property="Border.BorderBrush" Value="{StaticResource BlackboxBorderBrush}" />
+        <Setter Property="Tag" Value="{x:Null}" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ContentControl}">
+                    <Grid>
+                        <Border
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding Border.BorderBrush}"
+                            BorderThickness="{TemplateBinding Border.BorderThickness}"
+                            CornerRadius="{TemplateBinding Border.CornerRadius}" />
+                        <Border
+                            Background="{TemplateBinding Tag}"
+                            CornerRadius="{TemplateBinding Border.CornerRadius}" />
+                        <ContentPresenter Margin="{TemplateBinding Padding}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style
+        x:Key="TextBlockBoldStyle"
+        BasedOn="{StaticResource {x:Type TextBlock}}"
+        TargetType="{x:Type TextBlock}">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="14.0" />
+        <Setter Property="LineHeight" Value="16.8" />
+        <Setter Property="Margin" Value="5" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
+    <Style x:Key="ButtonStyle" TargetType="{x:Type Button}">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="FontFamily" Value="Inter" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{StaticResource ButtonBorderBrush}" />
+        <Setter Property="Border.CornerRadius" Value="8" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <ControlTemplate.Resources>
+                        <Style BasedOn="{StaticResource TextBlockBoldStyle}" TargetType="TextBlock">
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                        </Style>
+                    </ControlTemplate.Resources>
+                    <Border
+                        Padding="{TemplateBinding Padding}"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding Border.CornerRadius}"
+                        Effect="{TemplateBinding Effect}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Focusable" Value="False" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource BlackboxBackgroundBrush2}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource BlackboxBackgroundBrush1}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="BlackboxBorderStyleBase" TargetType="{x:Type Border}">
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="#06FFFFFF" />
+    </Style>
+
+    <Style
+        x:Key="BlackboxBorderStyle0"
+        BasedOn="{StaticResource BlackboxBorderStyleBase}"
+        TargetType="{x:Type Border}">
+        <Setter Property="Background" Value="{DynamicResource BlackboxBackgroundBrush0}" />
+        <Setter Property="Padding" Value="4" />
+    </Style>
+    <Style
+        x:Key="BlackboxBorderStyle1"
+        BasedOn="{StaticResource BlackboxBorderStyleBase}"
+        TargetType="{x:Type Border}">
+        <Setter Property="Background" Value="{DynamicResource BlackboxBackgroundBrush1}" />
+        <Setter Property="Padding" Value="4" />
+    </Style>
+</ResourceDictionary>

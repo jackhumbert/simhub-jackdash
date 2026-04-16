@@ -1,4 +1,5 @@
 ﻿using FMOD;
+using GongSolutions.Wpf.DragDrop.Utilities;
 using SimHub.Plugins;
 using System;
 using System.Collections.Generic;
@@ -23,23 +24,44 @@ namespace User.CornerSpeed
     public partial class iRacingCornerSpeedsView : UserControl
     {
         public iRacingCornerSpeeds ViewModel => DataContext as iRacingCornerSpeeds;
-
-        public CornerSpeedPlugin Plugin { get; set; }
+        
+        //public CornerSpeedPlugin Plugin { get; set; }
+        public CornerSpeedPluginSettings Settings { get; set; }
 
         public iRacingCornerSpeedsView()
         {
             InitializeComponent();
-            Plugin = PluginManager.GetInstance().GetPlugin<CornerSpeedPlugin>();
+            //Plugin = PluginManager.GetInstance().GetPlugin<CornerSpeedPlugin>();
+            Settings = PluginManager.GetInstance().GetPlugin<CornerSpeedPlugin>().Settings;
         }
 
         private void Mode_Prev(object sender, RoutedEventArgs e)
         {
-            Plugin.Mode = (ComparisonMode)(((int)Plugin.Mode + (int)ComparisonMode.Count - 1) % (int)ComparisonMode.Count);
+            Settings.Mode = (ComparisonMode)(((int)Settings.Mode + (int)ComparisonMode.Count - 1) % (int)ComparisonMode.Count);
         }
 
         private void Mode_Next(object sender, RoutedEventArgs e)
         {
-            Plugin.Mode = (ComparisonMode)(((int)Plugin.Mode + 1) % (int)ComparisonMode.Count);
+            Settings.Mode = (ComparisonMode)(((int)Settings.Mode + 1) % (int)ComparisonMode.Count);
+        }
+
+        //private bool isMoving = false;
+
+        private void iRacingBorder_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            //isMoving = true;
+            if (e.ChangedButton == MouseButton.Left)
+                this.GetVisualAncestor<Window>().DragMove();
+        }
+
+        private void iRacingBorder_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            //isMoving = false;
+        }
+
+        private void iRacingBorder_MouseMove(object sender, MouseEventArgs e)
+        {
+            //ViewModel.Owner.BaseWidth += e.
         }
     }
 }

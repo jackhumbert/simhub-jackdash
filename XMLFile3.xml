@@ -1,0 +1,51 @@
+﻿<ContentControl x:Class="SimHub.Plugins.OutputPlugins.GraphicalDash.DashHostControls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:editorcontrols="clr-namespace:SimHub.Plugins.OutputPlugins.EditorControls" xmlns:local="clr-namespace:SimHub.Plugins.OutputPlugins.GraphicalDash" FocusManager.IsFocusScope="True" IsTabStop="True" Focusable="True" Background="#00FFFFFF" Margin="0" Padding="0" FocusVisualStyle="{x:Null}" Content="{Binding Path=Dashboard.SelectedScreen}" Height="{Binding Path=Dashboard.BaseHeight}" Width="{Binding Path=Dashboard.BaseWidth}" PreviewKeyDown="DashHost_PreviewKeyDown" LostFocus="UserControl_LostFocus">
+  <FrameworkElement.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/SimHub.Plugins;component/OutputPlugins/GraphicalDash/Render/ControlsTemplates.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <local:SelectionTemplateSelector x:Key="templateSelector" />
+    </ResourceDictionary>
+  </FrameworkElement.Resources>
+  <ContentControl.ContentTemplate>
+    <DataTemplate>
+      <Canvas Name="screenCanvas" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Path=Owner.BaseWidth}" Visibility="{Binding Path=IsSelected, Converter={SHBoolToVisibilityConverter}}" FocusVisualStyle="{x:Null}" PreviewMouseDown="Grid_PreviewMouseDown">
+        <Panel.Background>
+          <ImageBrush ImageSource="{Binding Path=EffectiveBackgroundScreen.ImageData}" />
+        </Panel.Background>
+        <local:GroupPresenter x:Name="GBackgroundContainer" Visibility="{Binding Path=Owner.ShowBackground, Converter={SHBoolToVisibilityConverter}}" Opacity="{Binding Path=Owner.BackgroundOpacityEx}" ItemSource="{Binding Path=BackgroundLayerItems}" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Path=Owner.BaseWidth}" />
+        <local:GroupPresenter x:Name="GContainer" ItemSource="{Binding Path=Items}" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Path=Owner.BaseWidth}" />
+        <local:GroupPresenter x:Name="GContainerForeground" 
+							  ="False" Visibility="{Binding Path=Owner.ShowForeground, Converter={SHBoolToVisibilityConverter}}" Opacity="{Binding Path=Owner.ForegroundOpacityEx}" ItemSource="{Binding Path=ForegroundLayerItems}" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Path=Owner.BaseWidth}" />
+        <Grid Visibility="{Binding Path=Owner.SnapToGrid, Converter={SHBoolToVisibilityConverter}}">
+          <Canvas Opacity="0.15" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Path=Owner.BaseWidth}" Visibility="{Binding Owner.Editor.IsEditMode, Converter={SHBoolToVisibilityConverter}}">
+            <Panel.Background>
+              <VisualBrush TileMode="Tile" Stretch="Uniform" ViewportUnits="Absolute" AlignmentX="Left" AlignmentY="Top" Viewport="{Binding Path=Owner.GridViewPort}">
+                <VisualBrush.Visual>
+                  <Rectangle Fill="#00FFFFFF" Stroke="#FFFF0000" StrokeThickness="1" Width="{Binding Path=Owner.GridSize}" Height="{Binding Path=Owner.GridSize}" />
+                </VisualBrush.Visual>
+              </VisualBrush>
+            </Panel.Background>
+          </Canvas>
+        </Grid>
+        <ItemsControl Name="icAdorners" ItemTemplateSelector="{StaticResource templateSelector}" ItemsSource="{Binding Path=Items}" Visibility="{Binding Owner.Editor.IsEditMode, Converter={SHBoolToVisibilityConverter}}" FocusVisualStyle="{x:Null}" Loaded="icAdorners_Loaded">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FocusVisualStyle="{x:Null}" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <FrameworkElement.Resources>
+            <ResourceDictionary>
+              <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/SimHub.Plugins;component/OutputPlugins/GraphicalDash/Render/SelectionTemplates.xaml" />
+              </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary>
+          </FrameworkElement.Resources>
+        </ItemsControl>
+        <Grid Name="selectionRectange" Visibility="{Binding Owner.Editor.IsEditMode, Converter={SHBoolToVisibilityConverter}}" FocusVisualStyle="{x:Null}">
+          <editorcontrols:SelectionRectangle Loaded="selectionRectange_Loaded" FocusVisualStyle="{x:Null}" Visibility="{Binding Owner.SelectionRectangle, Converter={SHBoolToVisibilityConverter}}" Height="{Binding Path=Owner.BaseHeight}" Width="{Binding Path=Owner.BaseWidth}" />
+        </Grid>
+      </Canvas>
+    </DataTemplate>
+  </ContentControl.ContentTemplate>
+</ContentControl>

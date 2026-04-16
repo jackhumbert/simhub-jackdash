@@ -21,6 +21,9 @@ public static class ColorExtensions
         // Return the new mixed color
         return Color.FromArgb(a, r, g, b);
     }
+        public static Color GreenColor = Color.FromRgb(0x33, 0xCC, 0x00);
+        public static Color WhiteColor = Color.FromRgb(0xFF, 0xFF, 0xFF);
+        public static Color RedColor = Color.FromRgb(0xE1, 0x25, 0x1B);
 }
 
 namespace User.CornerSpeed
@@ -85,6 +88,30 @@ namespace User.CornerSpeed
             throw new NotImplementedException();
         }
     }
+    public class MeterDeltaConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            double val = System.Convert.ToDouble(value);
+            string valString = val.ToString();
+            string finalString = string.Empty;
+            var nfi = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
+            //nfi.NumberGroupSeparator = " ";
+            finalString = val.ToString("0.0", nfi); // "1 234 897.11"
+            //finalString = finalString.Replace(".", ",");//"1 234 897,11"
+            if (val >= 0)
+            {
+                finalString = "+" + finalString;
+            }
+
+            return finalString + "m";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     public class TimeSpanFormatter : IValueConverter
     {
@@ -134,10 +161,6 @@ namespace User.CornerSpeed
 
     public class DeltaBarColorConverter : IValueConverter
     {
-        public Color GreenColor = Color.FromRgb(0x5C, 0xD6, 0x33);
-        public Color WhiteColor = Color.FromRgb(0xFF, 0xFF, 0xFF);
-        public Color RedColor = Color.FromRgb(0xE1, 0x25, 0x1B);
-
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is double doubleValue)
@@ -145,15 +168,15 @@ namespace User.CornerSpeed
                 doubleValue *= 30;
                 if (doubleValue > 0)
                 {
-                    return new SolidColorBrush(WhiteColor.MixWith(RedColor, Math.Min(doubleValue, 1.0)));
+                    return new SolidColorBrush(ColorExtensions.WhiteColor.MixWith(ColorExtensions.RedColor, Math.Min(doubleValue, 1.0)));
                 }
                 else
                 {
-                    return new SolidColorBrush(WhiteColor.MixWith(GreenColor, Math.Min(-doubleValue, 1.0)));
+                    return new SolidColorBrush(ColorExtensions.WhiteColor.MixWith(ColorExtensions.GreenColor, Math.Min(-doubleValue, 1.0)));
                 }
             }
             // Return a default color or null if the value is not an integer
-            return new SolidColorBrush(WhiteColor);
+            return new SolidColorBrush(ColorExtensions.WhiteColor);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -215,25 +238,21 @@ namespace User.CornerSpeed
 
     public class DeltaColorConverter : IValueConverter
     {
-        public Color GreenColor = Color.FromRgb(0x5C, 0xD6, 0x33);
-        public Color WhiteColor = Color.FromRgb(0xFF, 0xFF, 0xFF);
-        public Color RedColor = Color.FromRgb(0xE1, 0x25, 0x1B);
-
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is double doubleValue)
             {
                 if (doubleValue > 0)
                 {
-                    return new SolidColorBrush(WhiteColor.MixWith(GreenColor, Math.Min(doubleValue, 1.0)));
+                    return new SolidColorBrush(ColorExtensions.WhiteColor.MixWith(ColorExtensions.GreenColor, Math.Min(doubleValue, 1.0)));
                 }
                 else
                 {
-                    return new SolidColorBrush(WhiteColor.MixWith(RedColor, Math.Min(-doubleValue, 1.0)));
+                    return new SolidColorBrush(ColorExtensions.WhiteColor.MixWith(ColorExtensions.RedColor, Math.Min(-doubleValue, 1.0)));
                 }
             }
             // Return a default color or null if the value is not an integer
-            return new SolidColorBrush(WhiteColor);
+            return new SolidColorBrush(ColorExtensions.WhiteColor);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -244,10 +263,6 @@ namespace User.CornerSpeed
 
     public class DurationDeltaColorConverter : IValueConverter
     {
-        public Color GreenColor = Color.FromRgb(0x5C, 0xD6, 0x33);
-        public Color WhiteColor = Color.FromRgb(0xFF, 0xFF, 0xFF);
-        public Color RedColor = Color.FromRgb(0xE1, 0x25, 0x1B);
-
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is TimeSpan timeSpan)
@@ -255,15 +270,15 @@ namespace User.CornerSpeed
                 var doubleValue = timeSpan.TotalSeconds / 0.1;
                 if (doubleValue > 0)
                 {
-                    return new SolidColorBrush(WhiteColor.MixWith(RedColor, Math.Min(doubleValue, 1.0)));
+                    return new SolidColorBrush(ColorExtensions.WhiteColor.MixWith(ColorExtensions.RedColor, Math.Min(doubleValue, 1.0)));
                 }
                 else
                 {
-                    return new SolidColorBrush(WhiteColor.MixWith(GreenColor, Math.Min(-doubleValue, 1.0)));
+                    return new SolidColorBrush(ColorExtensions.WhiteColor.MixWith(ColorExtensions.GreenColor, Math.Min(-doubleValue, 1.0)));
                 }
             }
             // Return a default color or null if the value is not an integer
-            return new SolidColorBrush(WhiteColor);
+            return new SolidColorBrush(ColorExtensions.WhiteColor);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

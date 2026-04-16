@@ -7,9 +7,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using SimHub.Plugins.OutputPlugins.Dash.WPFUI;
+using System.Linq;
+using System.Reflection;
 
 namespace User.CornerSpeed
 {
+
+public interface INeedLoadedDynamically
+{
+
+}
 
 public static class TreeHelper
 {
@@ -59,43 +66,43 @@ internal class Program
     {
         var control = (ContentControl)sender;
         
-        { 
-            DataTemplateKey dtKey = new DataTemplateKey(typeof(iRacingGroupItem));
-            if (control.Resources[dtKey] == null)
-                control.Resources.Add(dtKey, JackDashResource[dtKey]);
-        }
-        { 
-            DataTemplateKey dtKey = new DataTemplateKey(typeof(iRacingSubGroupItem));
-            if (control.Resources[dtKey] == null)
-                control.Resources.Add(dtKey, JackDashResource[dtKey]);
-        }
-        { 
-            DataTemplateKey dtKey = new DataTemplateKey(typeof(JackWidgetItem));
-            if (control.Resources[dtKey] == null)
-                control.Resources.Add(dtKey, JackDashResource[dtKey]);
-        }
-        { 
-            DataTemplateKey dtKey = new DataTemplateKey(typeof(iRacingCornerSpeeds));
-            if (control.Resources[dtKey] == null)
-                control.Resources.Add(dtKey, JackDashResource[dtKey]);
-        }
-        { 
-            DataTemplateKey dtKey = new DataTemplateKey(typeof(iRacingCornerSpeedDeltaItem));
-            if (control.Resources[dtKey] == null)
-                control.Resources.Add(dtKey, JackDashResource[dtKey]);
-        }
-
-        //foreach (var child in TreeHelper.FindVisualChildren<ItemsControl>(control))
-        //{
-        //    //MessageBox.Show("Injecting", "Question", MessageBoxButton.YesNo);
-        //    //if (child.Resources[dtKey] != null)
-        //    //    continue;
-
-        //    //child.Resources.Add(dtKey, JackDashResource[dtKey]);
-        //    var tems = child.ItemTemplateSelector;
-        //    child.ItemTemplateSelector = null;
-        //    child.ItemTemplateSelector = tems;
+        //{ 
+        //    DataTemplateKey dtKey = new DataTemplateKey(typeof(iRacingGroupItem));
+        //    if (control.Resources[dtKey] == null)
+        //        control.Resources.Add(dtKey, ControlsTemplates[dtKey]);
         //}
+        //{ 
+        //    DataTemplateKey dtKey = new DataTemplateKey(typeof(iRacingSubGroupItem));
+        //    if (control.Resources[dtKey] == null)
+        //        control.Resources.Add(dtKey, ControlsTemplates[dtKey]);
+        //}
+        //{ 
+        //    DataTemplateKey dtKey = new DataTemplateKey(typeof(JackChartItem));
+        //    if (control.Resources[dtKey] == null)
+        //        control.Resources.Add(dtKey, ControlsTemplates[dtKey]);
+        //}
+        //{ 
+        //    DataTemplateKey dtKey = new DataTemplateKey(typeof(iRacingCornerSpeeds));
+        //    if (control.Resources[dtKey] == null)
+        //        control.Resources.Add(dtKey, ControlsTemplates[dtKey]);
+        //}
+        //{ 
+        //    DataTemplateKey dtKey = new DataTemplateKey(typeof(iRacingCornerSpeedDeltaItem));
+        //    if (control.Resources[dtKey] == null)
+        //        control.Resources.Add(dtKey, ControlsTemplates[dtKey]);
+        //}
+
+        var itrf = typeof(INeedLoadedDynamically);
+        var types = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(s => s.GetTypes())
+                .Where(p => itrf.IsAssignableFrom(p) && p.IsClass);
+
+        foreach (var type in types)
+        {
+            DataTemplateKey dtKey = new DataTemplateKey(type);
+            if (control.Resources[dtKey] == null)
+                control.Resources.Add(dtKey, ControlsTemplates[dtKey]);
+        }
 
         if (control is DashHostControls dhc)
         {
@@ -156,6 +163,6 @@ internal class Program
         }
     }
 
-    public static ResourceDictionary JackDashResource = Application.LoadComponent(new Uri("/User.CornerSpeed;component/ControlsTemplates.xaml", UriKind.RelativeOrAbsolute)) as ResourceDictionary;
+    public static ResourceDictionary ControlsTemplates = Application.LoadComponent(new Uri("/User.CornerSpeed;component/ControlsTemplates.xaml", UriKind.RelativeOrAbsolute)) as ResourceDictionary;
 }
 }
