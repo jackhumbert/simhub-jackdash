@@ -41,7 +41,7 @@ namespace User.CornerSpeed
         private const double DefaultCenterOffset = 80.0;
         private const int UpdateIntervalMs = 33;
 
-        private readonly DispatcherTimer _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(UpdateIntervalMs) };
+        private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(UpdateIntervalMs) };
         private double _x;
         private double _y;
 
@@ -70,8 +70,7 @@ namespace User.CornerSpeed
 
         private void UpdatePendulum()
         {
-            var item = DataContext as CarLoadPendulumItem;
-            if (item == null)
+            if (DataContext is not CarLoadPendulumItem item)
             {
                 return;
             }
@@ -118,7 +117,7 @@ namespace User.CornerSpeed
 
             try
             {
-                return Convert.ToDouble(PluginManager.GetPropertyValue(propertyName));
+                return Convert.ToDouble(PluginManager.GetInstance().GetPropertyValue(propertyName));
             }
             catch
             {
