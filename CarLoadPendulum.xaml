@@ -17,6 +17,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <Canvas Background="Transparent">
+        <Canvas x:Name="TraceLayer" IsHitTestVisible="False" />
         <Ellipse
             x:Name="Pivot"
             Width="8"
